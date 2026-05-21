@@ -137,20 +137,24 @@ class GameState extends ChangeNotifier {
     if (!isDead) {
       stats.age++;
       _saveState();
-      _triggerNextEvent();
+      // Re-check after incrementing: reaching age 100 ends the game.
+      if (isDead) {
+        _triggerLifeStory();
+      } else {
+        _triggerNextEvent();
+      }
     } else {
-      // Died naturally — generate story
       _triggerLifeStory();
     }
   }
 
   void _checkAchievements() {
     if (stats.age >= 80 && !stats.achievements.contains('Centenarian in Training')) {
-      stats.achievements.add('Centenarian in Training');
+      stats.achievements = List.from(stats.achievements)..add('Centenarian in Training');
       addLog('Achievement Unlocked: Centenarian in Training!');
     }
     if (stats.happiness == 100 && !stats.achievements.contains('Absolute Bliss')) {
-      stats.achievements.add('Absolute Bliss');
+      stats.achievements = List.from(stats.achievements)..add('Absolute Bliss');
       addLog('Achievement Unlocked: Absolute Bliss!');
     }
   }
