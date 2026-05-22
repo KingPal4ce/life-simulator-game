@@ -30,6 +30,8 @@ class Decision {
 }
 
 class PlayerStats {
+  static const int schemaVersion = 1;
+
   int age;
   int happiness;
   int health;
@@ -51,6 +53,7 @@ class PlayerStats {
   });
 
   Map<String, dynamic> toJson() => {
+        'schemaVersion': schemaVersion,
         'age': age,
         'happiness': happiness,
         'health': health,
@@ -62,6 +65,12 @@ class PlayerStats {
       };
 
   factory PlayerStats.fromJson(Map<String, dynamic> json) {
+    final version = json['schemaVersion'] as int?;
+    if (version != schemaVersion) {
+      throw FormatException(
+        'PlayerStats schema version mismatch: expected $schemaVersion, got $version',
+      );
+    }
     return PlayerStats(
       age: json['age'] as int? ?? 0,
       happiness: json['happiness'] as int? ?? 80,
@@ -122,7 +131,7 @@ class GameEvent {
     return GameEvent(
       title: json['title'] as String,
       description: json['description'] as String,
-      options: (json['options'] as List<dynamic>)
+      options: (json['options'] as List<dynamic>? ?? [])
           .map((e) => EventOption.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
