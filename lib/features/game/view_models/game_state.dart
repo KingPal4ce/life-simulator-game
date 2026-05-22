@@ -5,12 +5,14 @@ import '../../../services/local_storage_service.dart';
 import '../../stats/stats_manager.dart';
 
 class GameState extends ChangeNotifier {
-  final AIService aiService;
-  final LocalStorageService localStorageService;
+  final IAIService aiService;
+  final ILocalStorageService localStorageService;
+  final Duration _retryDelay;
 
   PlayerStats stats = PlayerStats();
   GameEvent? currentEvent;
   bool isGeneratingEvent = false;
+  bool eventGenerationFailed = false;
   String previousOutcome = 'You were just born.';
   String? currentConsequence;
   EventOption? lastChosenOption;
@@ -21,7 +23,17 @@ class GameState extends ChangeNotifier {
 
   bool get isDead => stats.health <= 0 || stats.age >= 100;
 
-  GameState({required this.aiService, required this.localStorageService});
+  // Achievement definitions — add new entries here to extend the system.
+  static final List<({String name, bool Function(PlayerStats) condition})> _achievementDefs = [
+    (name: 'Centenarian in Training', condition: (s) => s.age >= 80),
+    (name: 'Absolute Bliss', condition: (s) => s.happiness == 100),
+  ];
+
+  GameState({
+    required this.aiService,
+    required this.localStorageService,
+    Duration retryDelay = const Duration(seconds: 1),
+  }) : _retryDelay = retryDelay;
 
   void loadOrStartGame() {
     final loadedStats = localStorageService.loadStats();
@@ -65,17 +77,25 @@ class GameState extends ChangeNotifier {
   }
 
   Future<void> _triggerNextEvent() async {
-    if (isDead) return;
+    if (isDead || isGeneratingEvent) return;
 
     isGeneratingEvent = true;
+    eventGenerationFailed = false;
     notifyListeners();
 
     final recentDecisions = stats.decisions.length > 5
         ? stats.decisions.sublist(stats.decisions.length - 5)
         : stats.decisions;
 
-    currentEvent = await aiService.generateNextEvent(stats, previousOutcome, recentDecisions);
+    GameEvent? event;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      event = await aiService.generateNextEvent(stats, previousOutcome, recentDecisions);
+      if (event != null) break;
+      if (attempt < 2 && _retryDelay.inMicroseconds > 0) await Future.delayed(_retryDelay);
+    }
 
+    currentEvent = event;
+    if (event == null) eventGenerationFailed = true;
     isGeneratingEvent = false;
     notifyListeners();
   }
@@ -134,28 +154,18 @@ class GameState extends ChangeNotifier {
 
   void _ageUp() {
     _checkAchievements();
-    if (!isDead) {
-      stats.age++;
-      _saveState();
-      // Re-check after incrementing: reaching age 100 ends the game.
-      if (isDead) {
-        _triggerLifeStory();
-      } else {
-        _triggerNextEvent();
-      }
-    } else {
-      _triggerLifeStory();
-    }
+    if (isDead) { _triggerLifeStory(); return; }
+    stats.age++;
+    _saveState();
+    if (isDead) { _triggerLifeStory(); } else { _triggerNextEvent(); }
   }
 
   void _checkAchievements() {
-    if (stats.age >= 80 && !stats.achievements.contains('Centenarian in Training')) {
-      stats.achievements = List.from(stats.achievements)..add('Centenarian in Training');
-      addLog('Achievement Unlocked: Centenarian in Training!');
-    }
-    if (stats.happiness == 100 && !stats.achievements.contains('Absolute Bliss')) {
-      stats.achievements = List.from(stats.achievements)..add('Absolute Bliss');
-      addLog('Achievement Unlocked: Absolute Bliss!');
+    for (final def in _achievementDefs) {
+      if (def.condition(stats) && !stats.achievements.contains(def.name)) {
+        stats.achievements = List.from(stats.achievements)..add(def.name);
+        addLog('Achievement Unlocked: ${def.name}!');
+      }
     }
   }
 }
