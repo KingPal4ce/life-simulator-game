@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nes_ui/nes_ui.dart';
+import '../../../core/app_colors.dart';
 import '../view_models/game_state.dart';
 import '../../../models/models.dart';
 import 'retro_container.dart';
@@ -98,7 +99,7 @@ class _ConsequencePanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            color: const Color(0xFF4A6B9C),
+            color: AppColors.sectionHeader,
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: const Text(
               'OUTCOME',
@@ -165,7 +166,7 @@ class _CurrentEventPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            color: const Color(0xFF8E7CC3),
+            color: AppColors.eventHeader,
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: const Text(
               'CURRENT EVENT',

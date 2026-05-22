@@ -24,49 +24,41 @@ class RetroStatBar extends StatelessWidget {
           // Pixelated Icon
           Icon(icon, color: Colors.orangeAccent),
           const SizedBox(width: 8),
-          
+
           // Label
           SizedBox(
             width: 80,
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
           ),
-          
+
           // The Progress Bar
           Expanded(
             child: RetroContainer(
               padding: EdgeInsets.zero,
-              borderWidth: 2,
-              hasShadow: false, // Flat inner bar
               child: Stack(
                 children: [
                   // Background track
-                  Container(
-                    height: 16,
-                    color: Colors.grey[300],
-                  ),
+                  Container(height: 16, color: Colors.grey[300]),
                   // Fill
                   FractionallySizedBox(
                     widthFactor: (value / 100.0).clamp(0.0, 1.0),
-                    child: Container(
-                      height: 16,
-                      color: barColor,
-                    ),
+                    child: Container(height: 16, color: barColor),
                   ),
                 ],
               ),
             ),
           ),
-          
+
           const SizedBox(width: 8),
           // Value text
           SizedBox(
-            width: 30,
+            width: 45,
             child: Text(
               value.toString(),
               textAlign: TextAlign.right,
               style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
             ),
-          )
+          ),
         ],
       ),
     );

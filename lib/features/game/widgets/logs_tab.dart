@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/app_colors.dart';
 import '../view_models/game_state.dart';
+import 'life_log_list_view.dart';
 import 'retro_container.dart';
 
 class LogsTab extends StatelessWidget {
@@ -41,7 +43,7 @@ class LogsTab extends StatelessWidget {
             ),
             const SizedBox(height: 16),
           ],
-          Expanded(child: _LifeLogPanel(state: state)),
+          Expanded(child: _LifeLogPanel(entries: state.stats.lifeLog)),
         ],
       ),
     );
@@ -49,9 +51,9 @@ class LogsTab extends StatelessWidget {
 }
 
 class _LifeLogPanel extends StatelessWidget {
-  final GameState state;
+  final List<String> entries;
 
-  const _LifeLogPanel({required this.state});
+  const _LifeLogPanel({required this.entries});
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +64,7 @@ class _LifeLogPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            color: const Color(0xFF4A6B9C),
+            color: AppColors.sectionHeader,
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: const Text(
               'LIFE LOG',
@@ -75,23 +77,9 @@ class _LifeLogPanel extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: ListView.builder(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(12),
-              itemCount: state.stats.lifeLog.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Text(
-                    state.stats.lifeLog[index],
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.bold,
-                      height: 2.3,
-                    ),
-                  ),
-                );
-              },
+              child: LifeLogListView(entries: entries),
             ),
           ),
         ],

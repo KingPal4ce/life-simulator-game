@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nes_ui/nes_ui.dart';
+import '../../../core/app_colors.dart';
 import '../view_models/game_state.dart';
+import '../widgets/life_log_list_view.dart';
 import '../widgets/retro_container.dart';
 
 class DeathScreen extends StatelessWidget {
@@ -39,7 +41,7 @@ class DeathScreen extends StatelessWidget {
           Expanded(
             child: RetroContainer(
               padding: EdgeInsetsGeometry.all(10),
-              backgroundColor: const Color(0xFF1C1F24),
+              backgroundColor: AppColors.cardBackground,
               child: ListView(
                 children: [
                   const Text(
@@ -194,23 +196,13 @@ class DeathScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     color: Colors.black45,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: state.stats.lifeLog
-                          .map(
-                            (log) => Padding(
-                              padding: const EdgeInsets.only(bottom: 4.0),
-                              child: Text(
-                                log,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                  height: 2.3,
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
+                    child: LifeLogListView(
+                      entries: state.stats.lifeLog,
+                      textStyle: const TextStyle(
+                        color: AppColors.logTextOnDark,
+                        fontSize: 12,
+                        height: 2.3,
+                      ),
                     ),
                   ),
                 ],

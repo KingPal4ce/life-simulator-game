@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/app_colors.dart';
 import '../../../models/models.dart';
 import 'retro_container.dart';
 import 'stat_bar.dart';
@@ -17,7 +18,7 @@ class StatsPanel extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
-            color: const Color(0xFF4A6B9C),
+            color: AppColors.sectionHeader,
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: const Text(
               'STATS',

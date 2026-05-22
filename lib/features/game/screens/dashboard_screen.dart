@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/app_colors.dart';
 import '../view_models/game_state.dart';
 import '../widgets/top_bar.dart';
 import '../widgets/life_tab.dart';
@@ -35,7 +36,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       bottomNavigationBar: state.isDead
           ? null
           : BottomNavigationBar(
-              backgroundColor: const Color(0xFF1C1F24),
+              backgroundColor: AppColors.cardBackground,
               selectedItemColor: Colors.amber,
               unselectedItemColor: Colors.white54,
               currentIndex: _currentIndex,

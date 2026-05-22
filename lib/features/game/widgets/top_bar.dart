@@ -16,12 +16,13 @@ class TopBar extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(Icons.child_care, color: Colors.amber, size: 32),
-              SizedBox(width: 8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('RetroLife', style: TextStyle(color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(
+                    'RetroLife',
+                    style: TextStyle(color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   Text('Life Simulator', style: TextStyle(color: Colors.white70, fontSize: 12)),
                 ],
               ),
@@ -72,11 +73,7 @@ class _TopBadge extends StatelessWidget {
   final String label;
   final String value;
 
-  const _TopBadge({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
+  const _TopBadge({required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +84,10 @@ class _TopBadge extends StatelessWidget {
         Column(
           children: [
             Text(label, style: const TextStyle(color: Colors.white54, fontSize: 10)),
-            Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(
+              value,
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       ],
