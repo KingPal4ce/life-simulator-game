@@ -1,3 +1,7 @@
+// FakeAIService methods return immediately (no real async delay).
+// Future.delayed(Duration.zero) flushes the microtask queue to let
+// _triggerNextEvent / _triggerLifeStory complete. If a fake is ever
+// changed to simulate real delays, replace with proper await chains or Completer.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:retro_life_simulator/features/game/view_models/game_state.dart';
 import 'package:retro_life_simulator/models/models.dart';
@@ -8,7 +12,7 @@ import 'package:retro_life_simulator/services/local_storage_service.dart';
 // Fakes
 // ---------------------------------------------------------------------------
 
-class FakeLocalStorageService extends LocalStorageService {
+class FakeLocalStorageService implements ILocalStorageService {
   PlayerStats? _stats;
   String? _outcome;
 
@@ -34,11 +38,12 @@ class FakeLocalStorageService extends LocalStorageService {
   }
 }
 
-class FakeAIService extends AIService {
+class FakeAIService implements IAIService {
   int generateEventCallCount = 0;
   int generateStoryCallCount = 0;
 
-  FakeAIService() : super(apiKey: 'fake-key-for-testing');
+  /// Return null for the first N calls to generateNextEvent.
+  int failFirstNCalls = 0;
 
   @override
   Future<GameEvent?> generateNextEvent(
@@ -47,6 +52,7 @@ class FakeAIService extends AIService {
     List<Decision> recentDecisions,
   ) async {
     generateEventCallCount++;
+    if (generateEventCallCount <= failFirstNCalls) return null;
     return GameEvent(
       title: 'Test Event',
       description: 'A test event happens.',
@@ -106,6 +112,17 @@ EventOption _makeOption({
       looksEffect: looks,
     );
 
+GameState _makeState({
+  FakeAIService? ai,
+  FakeLocalStorageService? lss,
+}) {
+  return GameState(
+    aiService: ai ?? FakeAIService(),
+    localStorageService: lss ?? FakeLocalStorageService(),
+    retryDelay: Duration.zero,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -118,7 +135,7 @@ void main() {
   setUp(() {
     fakeAI = FakeAIService();
     fakeLSS = FakeLocalStorageService();
-    state = GameState(aiService: fakeAI, localStorageService: fakeLSS);
+    state = _makeState(ai: fakeAI, lss: fakeLSS);
   });
 
   // -------------------------------------------------------------------------
@@ -542,6 +559,80 @@ void main() {
 
       await Future.delayed(Duration.zero);
       expect(state.isGeneratingEvent, isFalse);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  group('eventGenerationFailed (H2)', () {
+    test('is false initially', () {
+      expect(state.eventGenerationFailed, isFalse);
+    });
+
+    test('is set to true when all retry attempts return null', () async {
+      fakeAI.failFirstNCalls = 999; // always fail
+      state.startGame();
+      await Future.delayed(Duration.zero);
+
+      expect(state.eventGenerationFailed, isTrue);
+      expect(state.currentEvent, isNull);
+    });
+
+    test('is false after a successful generation', () async {
+      state.startGame();
+      await Future.delayed(Duration.zero);
+
+      expect(state.eventGenerationFailed, isFalse);
+    });
+
+    test('resets to false at the start of each new generation attempt', () async {
+      fakeAI.failFirstNCalls = 999;
+      state.startGame();
+      await Future.delayed(Duration.zero);
+      expect(state.eventGenerationFailed, isTrue);
+
+      // Reset the fake to succeed, then trigger a fresh start
+      fakeAI.failFirstNCalls = 0;
+      state.startGame();
+      await Future.delayed(Duration.zero);
+
+      expect(state.eventGenerationFailed, isFalse);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  group('retry logic (H3)', () {
+    test('succeeds after two failures — callCount is 3, event is non-null', () async {
+      fakeAI.failFirstNCalls = 2; // fail first 2, succeed on 3rd
+      state.startGame();
+      await Future.delayed(Duration.zero);
+
+      expect(fakeAI.generateEventCallCount, 3);
+      expect(state.currentEvent, isNotNull);
+      expect(state.eventGenerationFailed, isFalse);
+    });
+
+    test('sets eventGenerationFailed when all 3 attempts fail', () async {
+      fakeAI.failFirstNCalls = 999; // always fail
+      state.startGame();
+      await Future.delayed(Duration.zero);
+
+      expect(fakeAI.generateEventCallCount, 3);
+      expect(state.eventGenerationFailed, isTrue);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  group('duplicate in-flight guard (H4)', () {
+    test('second generation attempt while one is in-progress is dropped', () async {
+      // startGame fires _triggerNextEvent once; isGeneratingEvent becomes true sync.
+      // Calling startGame again immediately re-enters _triggerNextEvent which returns early.
+      state.startGame();
+      state.startGame(); // second call: _triggerNextEvent guard fires
+
+      await Future.delayed(Duration.zero);
+
+      // Only 1 actual AI call despite 2 start attempts
+      expect(fakeAI.generateEventCallCount, 1);
     });
   });
 }

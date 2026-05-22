@@ -81,8 +81,8 @@ void main() {
       expect(restored.decisions.first.eventTitle, 'Test');
     });
 
-    test('fromJson uses defaults for missing fields', () {
-      final stats = PlayerStats.fromJson({});
+    test('fromJson uses defaults for missing fields when schemaVersion matches', () {
+      final stats = PlayerStats.fromJson({'schemaVersion': PlayerStats.schemaVersion});
 
       expect(stats.age, 0);
       expect(stats.happiness, 80);
@@ -94,8 +94,23 @@ void main() {
       expect(stats.decisions, isEmpty);
     });
 
+    test('fromJson throws FormatException on mismatched schemaVersion', () {
+      expect(
+        () => PlayerStats.fromJson({'schemaVersion': 999}),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('fromJson throws FormatException when schemaVersion is absent', () {
+      expect(
+        () => PlayerStats.fromJson({'age': 5, 'health': 90}),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
     test('fromJson deserialises nested decisions', () {
       final json = {
+        'schemaVersion': PlayerStats.schemaVersion,
         'age': 5,
         'decisions': [
           {'age': 3, 'eventTitle': 'Park', 'choiceText': 'Play', 'outcome': 'Fun.'}
@@ -180,6 +195,25 @@ void main() {
       });
 
       expect(event.options.length, 3);
+    });
+
+    test('fromJson returns empty options list when options key is absent', () {
+      final event = GameEvent.fromJson({
+        'title': 'Mystery',
+        'description': 'Something happens.',
+      });
+
+      expect(event.options, isEmpty);
+    });
+
+    test('fromJson returns empty options list when options is null', () {
+      final event = GameEvent.fromJson({
+        'title': 'Mystery',
+        'description': 'Something happens.',
+        'options': null,
+      });
+
+      expect(event.options, isEmpty);
     });
   });
 }
