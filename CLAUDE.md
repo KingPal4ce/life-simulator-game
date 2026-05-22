@@ -37,6 +37,7 @@ This is a single-screen Flutter life simulator. A player ages from 0 to 100, mak
 ```
 main.dart
   └─ initializes LocalStorageService (Hive) + AIService (Gemini)
+  └─ wires concrete impls into GameState via IAIService / ILocalStorageService interfaces
   └─ provides GameState (ChangeNotifier) via Provider
 
 GameState  ←─ the only state object; screens/widgets read it via context.watch<GameState>()
@@ -52,15 +53,18 @@ GameState  ←─ the only state object; screens/widgets read it via context.wat
 | `lib/models/models.dart` | All domain types: `PlayerStats`, `GameEvent`, `EventOption`, `Decision` |
 | `lib/services/ai_service.dart` | Two Gemini 2.5 Flash models — `_eventModel` (structured JSON schema) and `_storyModel` (free-form prose, temperature 1.0) |
 | `lib/services/local_storage_service.dart` | Hive box wrapper; serialises `PlayerStats` + `previousOutcome` as JSON strings |
+| `lib/services/interfaces.dart` | `IAIService` and `ILocalStorageService` abstract interfaces |
 | `lib/features/stats/stats_manager.dart` | Stateless helper; single method `applyOptionEffects` that clamps all four stats |
 | `lib/features/game/view_models/game_state.dart` | Central `ChangeNotifier`; owns the full game loop |
 | `lib/features/game/screens/dashboard_screen.dart` | Tab host: **Life** tab (stats + event panel) and **Logs** tab; swaps to `DeathScreen` when `isDead` |
 | `lib/features/game/screens/death_screen.dart` | Game-over screen showing final stats, achievements, AI-generated life story, and full life log |
+| `lib/features/game/widgets/life_log_list_view.dart` | Extracted widget; renders a `List<String>` log with consistent styling |
+| `lib/core/app_colors.dart` | Single source of truth for all UI colors — use `AppColors.*` constants, never raw hex values |
 
 ### Game loop (inside `GameState`)
 
 1. `loadOrStartGame()` — restores Hive session or calls `startGame()`
-2. `_triggerNextEvent()` — calls `AIService.generateNextEvent()` with the last 5 decisions as context
+2. `_triggerNextEvent()` — calls `AIService.generateNextEvent()` with the last 5 decisions as context; guarded by `isGeneratingEvent` flag to prevent concurrent calls; retries up to 3 times with 1 s exponential backoff before setting `eventGenerationFailed`
 3. `selectOption(option)` — applies stat effects via `StatsManager`, records a `Decision`, saves state
 4. `continueToNextEvent()` — advances `previousOutcome`, calls `_ageUp()`
 5. `_ageUp()` — runs `_checkAchievements()`, increments age, checks death; if alive repeats from step 2, if dead calls `_triggerLifeStory()`
@@ -75,16 +79,26 @@ GameState  ←─ the only state object; screens/widgets read it via context.wat
 
 `AIService` uses Gemini's structured output (via `responseSchema`) so event JSON is always well-typed without manual parsing guards. The prompt intentionally breaks direct cause-and-effect 40% of the time (`useDirectContext` flag) to keep events feeling varied.
 
+`EventOption` fields all default to 0 / empty string, and `fromJson()` uses null coalescing, so incomplete event JSON never crashes at parse time.
+
 ### Achievements
 
-`_checkAchievements()` in `GameState` is the single place to add new achievements. It runs at the start of every `_ageUp()` call. Currently implemented: `'Centenarian in Training'` (age ≥ 80) and `'Absolute Bliss'` (happiness == 100).
+Achievements are data-driven: `_achievementDefs` in `GameState` is a `List<({String name, bool Function(PlayerStats) condition})>`. `_checkAchievements()` iterates the list and unlocks any whose predicate returns true and whose name isn't already in `stats.achievements`. To add an achievement, append a new record to `_achievementDefs` — no other code change needed.
+
+Currently defined: `'Centenarian in Training'` (age ≥ 80) and `'Absolute Bliss'` (happiness == 100).
+
+### Schema versioning
+
+`PlayerStats` includes `static const int schemaVersion = 1`. `toJson()` writes it; `fromJson()` throws `FormatException` if the version field is absent or mismatched. Increment the constant and add migration logic in `fromJson()` whenever the stored shape changes.
 
 ### UI conventions
 
-- NES-style theme via `nes_ui` package (`flutterNesTheme()`); use `NesButton` and `RetroContainer` for any new interactive or card-like elements. `RetroContainer` is a thin local wrapper around `NesContainer` with dark background defaults (`0xFF1C1F24`).
+- NES-style theme via `nes_ui` package (`flutterNesTheme()`); use `NesButton` and `RetroContainer` for any new interactive or card-like elements. `RetroContainer` is a thin local wrapper around `NesContainer` with dark background defaults.
 - All widgets receive `GameState` (or a slice of it) as a constructor parameter — no `context.watch` inside leaf widgets.
-- Dark background palette: scaffold `0xFF2E3239`, card/panel `0xFF1C1F24`.
+- All colors must come from `AppColors` (`darkBackground`, `cardBackground`, `sectionHeader`, `eventHeader`, `logTextOnLight`, `logTextOnDark`).
 
 ### Testing
 
-Tests use fake implementations (`FakeLocalStorageService`, fake `AIService`) defined directly in each test file — no mocking library. When adding new tests, extend this same in-file fake pattern rather than introducing a mocking framework.
+Three test files: `game_state_test.dart` (game loop, retry, achievements, in-flight guard), `models_test.dart` (serialization, schema validation), `stats_manager_test.dart` (stat clamping).
+
+Tests use in-file fake implementations (`FakeAIService`, `FakeLocalStorageService`) — no mocking library. Fakes accept constructor params like `failFirstNCalls` to simulate retry scenarios. Pass `retryDelay: Duration.zero` to `GameState` in tests to skip backoff delays. Use `Future.delayed(Duration.zero)` in tests to flush the microtask queue after async calls.
