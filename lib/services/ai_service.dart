@@ -4,7 +4,23 @@ import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/models.dart';
 
-class AIService {
+abstract interface class IAIService {
+  Future<GameEvent?> generateNextEvent(
+    PlayerStats stats,
+    String previousOutcome,
+    List<Decision> recentDecisions,
+  );
+
+  Future<String> generateLifeStory(
+    PlayerStats stats,
+    List<String> lifeLog,
+    List<Decision> decisions,
+  );
+}
+
+class AIService implements IAIService {
+  static const String _geminiModel = 'gemini-2.5-flash';
+
   final GenerativeModel _eventModel;
   final GenerativeModel _storyModel;
 
@@ -12,7 +28,7 @@ class AIService {
 
   AIService({required String apiKey})
       : _eventModel = GenerativeModel(
-          model: 'gemini-2.5-flash',
+          model: _geminiModel,
           apiKey: apiKey,
           generationConfig: GenerationConfig(
             responseMimeType: 'application/json',
@@ -60,13 +76,14 @@ class AIService {
           ),
         ),
         _storyModel = GenerativeModel(
-          model: 'gemini-2.5-flash',
+          model: _geminiModel,
           apiKey: apiKey,
           generationConfig: GenerationConfig(
             temperature: 1.0,
           ),
         );
 
+  @override
   Future<GameEvent?> generateNextEvent(
     PlayerStats stats,
     String previousOutcome,
@@ -122,6 +139,7 @@ Return ONLY valid JSON.
     return null;
   }
 
+  @override
   Future<String> generateLifeStory(
     PlayerStats stats,
     List<String> lifeLog,
