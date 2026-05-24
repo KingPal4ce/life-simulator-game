@@ -22,7 +22,9 @@ class TopBar extends StatelessWidget {
               shape: BoxShape.circle,
               color: Colors.white.withValues(alpha: 0.15),
             ),
-            child: const Center(child: Text('👤', style: TextStyle(fontSize: 20))),
+            child: const Center(
+              child: Text('👤', style: TextStyle(fontSize: 20)),
+            ),
           ),
           const SizedBox(width: 12),
           Column(
@@ -30,7 +32,7 @@ class TopBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'RetroLife',
+                'LifeSimulator',
                 style: TextStyle(
                   color: AppColors.accentYellow,
                   fontSize: 18,
@@ -58,7 +60,11 @@ class TopBar extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.settings, color: Colors.white70, size: 20),
+              child: const Icon(
+                Icons.settings,
+                color: Colors.white70,
+                size: 20,
+              ),
             ),
           ),
         ],
@@ -79,14 +85,20 @@ class TopBar extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textOnDarkMuted)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textOnDarkMuted),
+            ),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               state.endLife();
             },
-            child: const Text('Yes, end it', style: TextStyle(color: AppColors.deltaNegative)),
+            child: const Text(
+              'Yes, end it',
+              style: TextStyle(color: AppColors.deltaNegative),
+            ),
           ),
         ],
       ),
