@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/app_colors.dart';
 
 class EventHeader extends StatelessWidget {
   final String title;
@@ -14,26 +15,24 @@ class EventHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Event Title
         Text(
           title,
           textAlign: TextAlign.center,
           style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            // Using a pixel font family here is highly recommended!
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
-        // Event Description
         Text(
           description,
           textAlign: TextAlign.center,
           style: const TextStyle(
-            fontSize: 14,
-            color: Colors.black87,
-            height: 1.7,
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: AppColors.textSecondary,
+            height: 1.6,
           ),
         ),
       ],
