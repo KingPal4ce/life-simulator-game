@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:nes_ui/nes_ui.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -44,8 +44,21 @@ class RetroLifeApp extends StatelessWidget {
     return MaterialApp(
       title: 'Retro Life',
       debugShowCheckedModeBanner: false,
-      theme: flutterNesTheme().copyWith(
-        scaffoldBackgroundColor: AppColors.darkBackground,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.selectedChoice,
+          brightness: Brightness.light,
+        ),
+        scaffoldBackgroundColor: AppColors.pageBackground,
+        textTheme: GoogleFonts.nunitoTextTheme(),
+        cardTheme: const CardThemeData(
+          elevation: 0,
+          color: AppColors.cardSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+          ),
+        ),
       ),
       home: const DashboardScreen(),
     );
