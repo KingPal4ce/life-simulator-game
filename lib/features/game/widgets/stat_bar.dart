@@ -1,62 +1,63 @@
 import 'package:flutter/material.dart';
-import 'retro_container.dart';
+import '../../../core/app_colors.dart';
 
-class RetroStatBar extends StatelessWidget {
+class ModernStatBar extends StatelessWidget {
   final String label;
   final int value; // 0 to 100
-  final IconData icon;
-  final Color barColor;
+  final String emoji;
 
-  const RetroStatBar({
+  const ModernStatBar({
     super.key,
     required this.label,
     required this.value,
-    required this.icon,
-    this.barColor = const Color(0xFF71C558), // Retro green
+    required this.emoji,
   });
 
   @override
   Widget build(BuildContext context) {
+    final clamped = value.clamp(0, 100) / 100.0;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 5.0),
       child: Row(
         children: [
-          // Pixelated Icon
-          Icon(icon, color: Colors.orangeAccent),
-          const SizedBox(width: 8),
-
-          // Label
+          Text(emoji, style: const TextStyle(fontSize: 18)),
+          const SizedBox(width: 6),
           SizedBox(
-            width: 80,
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            width: 72,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: AppColors.textPrimary,
+              ),
+            ),
           ),
-
-          // The Progress Bar
           Expanded(
-            child: RetroContainer(
-              padding: EdgeInsets.zero,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
               child: Stack(
                 children: [
-                  // Background track
-                  Container(height: 16, color: Colors.grey[300]),
-                  // Fill
+                  Container(height: 8, color: AppColors.statBarTrack),
                   FractionallySizedBox(
-                    widthFactor: (value / 100.0).clamp(0.0, 1.0),
-                    child: Container(height: 16, color: barColor),
+                    widthFactor: clamped,
+                    child: Container(height: 8, color: AppColors.statBarFill),
                   ),
                 ],
               ),
             ),
           ),
-
           const SizedBox(width: 8),
-          // Value text
           SizedBox(
-            width: 45,
+            width: 32,
             child: Text(
               value.toString(),
               textAlign: TextAlign.right,
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
         ],
