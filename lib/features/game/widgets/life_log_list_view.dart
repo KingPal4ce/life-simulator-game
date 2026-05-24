@@ -40,7 +40,7 @@ class LifeLogListView extends StatelessWidget {
     final items = <Widget>[];
     String? lastStage;
 
-    for (final entry in displayed.reversed.toList()) {
+    for (final entry in displayed) {
       final age = _parseAge(entry);
       final stage = age != null ? lifeStageForAge(age) : null;
 
