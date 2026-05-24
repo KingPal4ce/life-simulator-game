@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:nes_ui/nes_ui.dart';
 import '../../../core/app_colors.dart';
 import '../view_models/game_state.dart';
 import '../widgets/life_log_list_view.dart';
-import '../widgets/retro_container.dart';
+import '../widgets/modern_card.dart';
 
 class DeathScreen extends StatelessWidget {
   final GameState state;
@@ -13,43 +12,46 @@ class DeathScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black87,
+      color: AppColors.deathBackground,
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 24),
-          const Center(
-            child: Icon(
-              Icons.sentiment_very_dissatisfied,
-              color: Colors.white,
-              size: 64,
-            ),
-          ),
           const SizedBox(height: 16),
+          const Center(child: Text('😢', style: TextStyle(fontSize: 64))),
+          const SizedBox(height: 12),
           const Center(
             child: Text(
               'GAME OVER',
               style: TextStyle(
-                color: Colors.redAccent,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
+                color: AppColors.accentYellow,
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 4,
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 4),
+          const Center(
+            child: Text(
+              'Your life has ended',
+              style: TextStyle(color: AppColors.textOnDarkMuted, fontSize: 14),
+            ),
+          ),
+          const SizedBox(height: 20),
           Expanded(
-            child: RetroContainer(
-              padding: EdgeInsetsGeometry.all(10),
-              backgroundColor: AppColors.cardBackground,
+            child: ModernCard(
+              backgroundColor: const Color(0xFF1E2D4A),
+              padding: const EdgeInsets.all(16),
               child: ListView(
                 children: [
                   const Text(
                     'LIFE SUMMARY',
                     style: TextStyle(
-                      color: Colors.amber,
-                      fontSize: 20,
+                      color: AppColors.accentYellow,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -61,7 +63,7 @@ class DeathScreen extends StatelessWidget {
                         icon: Icons.calendar_today,
                         label: 'Age',
                         value: '${state.stats.age}',
-                        color: Colors.white,
+                        color: AppColors.accentYellow,
                       ),
                     ],
                   ),
@@ -69,51 +71,37 @@ class DeathScreen extends StatelessWidget {
                   const Text(
                     'FINAL STATS',
                     style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 14,
+                      color: AppColors.textOnDarkMuted,
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
                     ),
                   ),
                   const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _MiniStat(
-                        icon: Icons.sentiment_very_satisfied,
-                        value: '${state.stats.happiness}',
-                        color: Colors.green,
-                      ),
-                      _MiniStat(
-                        icon: Icons.favorite,
-                        value: '${state.stats.health}',
-                        color: Colors.redAccent,
-                      ),
-                      _MiniStat(
-                        icon: Icons.psychology,
-                        value: '${state.stats.smarts}',
-                        color: Colors.orange,
-                      ),
-                      _MiniStat(
-                        icon: Icons.face,
-                        value: '${state.stats.looks}',
-                        color: Colors.purpleAccent,
-                      ),
+                      _MiniStat(emoji: '😊', value: '${state.stats.happiness}'),
+                      _MiniStat(emoji: '❤️', value: '${state.stats.health}'),
+                      _MiniStat(emoji: '🧠', value: '${state.stats.smarts}'),
+                      _MiniStat(emoji: '👕', value: '${state.stats.looks}'),
                     ],
                   ),
                   const SizedBox(height: 24),
                   const Text(
                     'ACHIEVEMENTS',
                     style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 14,
+                      color: AppColors.textOnDarkMuted,
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
                     ),
                   ),
                   const SizedBox(height: 10),
                   if (state.stats.achievements.isEmpty)
                     const Text(
                       'None earned this life.',
-                      style: TextStyle(color: Colors.white70),
+                      style: TextStyle(color: AppColors.textOnDarkMuted),
                     )
                   else
                     Wrap(
@@ -126,24 +114,25 @@ class DeathScreen extends StatelessWidget {
                                 a,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                  fontSize: 12,
                                 ),
                               ),
-                              backgroundColor: Colors.amber.withValues(
-                                alpha: 0.8,
-                              ),
+                              backgroundColor: AppColors.accentYellow.withValues(alpha: 0.9),
                             ),
                           )
                           .toList(),
                     ),
-                  const SizedBox(height: 32),
-                  const Divider(color: Colors.white24),
+                  const SizedBox(height: 24),
+                  const Divider(color: Colors.white12),
                   const SizedBox(height: 16),
                   const Text(
                     'YOUR STORY',
                     style: TextStyle(
-                      color: Colors.amber,
-                      fontSize: 18,
+                      color: AppColors.accentYellow,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -152,12 +141,12 @@ class DeathScreen extends StatelessWidget {
                     const Center(
                       child: Column(
                         children: [
-                          CircularProgressIndicator(color: Colors.amber),
+                          CircularProgressIndicator(color: AppColors.accentYellow),
                           SizedBox(height: 12),
                           Text(
                             'Writing your life story...',
                             style: TextStyle(
-                              color: Colors.white54,
+                              color: AppColors.textOnDarkMuted,
                               fontStyle: FontStyle.italic,
                             ),
                           ),
@@ -168,59 +157,55 @@ class DeathScreen extends StatelessWidget {
                     Text(
                       state.lifeStory!,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textOnDark,
                         fontSize: 15,
-                        height: 2.3,
+                        height: 1.8,
                       ),
                     )
                   else
                     const Text(
                       'Their story could not be told.',
                       style: TextStyle(
-                        color: Colors.white54,
+                        color: AppColors.textOnDarkMuted,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
-                  const SizedBox(height: 32),
-                  const Divider(color: Colors.white24),
+                  const SizedBox(height: 24),
+                  const Divider(color: Colors.white12),
                   const SizedBox(height: 16),
                   const Text(
                     'LIFE LOG',
                     style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 14,
+                      color: AppColors.textOnDarkMuted,
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    color: Colors.black45,
-                    child: LifeLogListView(
-                      entries: state.stats.lifeLog,
-                      textStyle: const TextStyle(
-                        color: AppColors.logTextOnDark,
-                        fontSize: 12,
-                        height: 2.3,
-                      ),
-                    ),
+                  LifeLogListView(
+                    entries: state.stats.lifeLog,
+                    isDarkMode: true,
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           Center(
-            child: NesButton(
-              type: NesButtonType.primary,
-              onPressed: () => state.startGame(),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                child: Text('Restart Life', style: TextStyle(fontSize: 20)),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accentYellow,
+                foregroundColor: Colors.black,
+                minimumSize: const Size(200, 52),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
               ),
+              onPressed: () => state.startGame(),
+              child: const Text('Start New Life'),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -244,48 +229,33 @@ class _SummaryStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, color: color, size: 32),
-        const SizedBox(height: 8),
+        Icon(icon, color: color, size: 28),
+        const SizedBox(height: 6),
         Text(
           value,
-          style: TextStyle(
-            color: color,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.bold),
         ),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white54, fontSize: 12),
-        ),
+        Text(label, style: const TextStyle(color: AppColors.textOnDarkMuted, fontSize: 12)),
       ],
     );
   }
 }
 
 class _MiniStat extends StatelessWidget {
-  final IconData icon;
+  final String emoji;
   final String value;
-  final Color color;
 
-  const _MiniStat({
-    required this.icon,
-    required this.value,
-    required this.color,
-  });
+  const _MiniStat({required this.emoji, required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: color, size: 16),
+        Text(emoji, style: const TextStyle(fontSize: 16)),
         const SizedBox(width: 4),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.bold),
         ),
       ],
     );
