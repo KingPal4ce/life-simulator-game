@@ -125,7 +125,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           backgroundColor: AppColors.selectedChoice,
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(50),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
           elevation: 2,
         ),
@@ -153,7 +155,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Expanded(
             child: ClipRect(
               child: OverflowBox(
-                alignment: Alignment.topCenter,
+                alignment: Alignment.bottomCenter,
                 maxHeight: double.infinity,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
@@ -187,8 +189,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -226,24 +230,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.logHeaderStart, AppColors.logHeaderEnd],
+                  ),
+                ),
                 child: Text(
-                  'Full Life Log',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                  '📖 Full Life Log',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    letterSpacing: 0.8,
                   ),
                 ),
               ),
               Expanded(
                 child: ListView(
                   controller: controller,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  children: [
-                    LifeLogListView(entries: state.stats.lifeLog),
-                  ],
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  children: [LifeLogListView(entries: state.stats.lifeLog)],
                 ),
               ),
             ],
