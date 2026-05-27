@@ -40,6 +40,9 @@ class AIService implements IAIService {
                 'description': Schema.string(
                   description: 'The narrative description of the event. Should feel age-appropriate and natural — not necessarily tied to the previous outcome.',
                 ),
+                'isDefining': Schema.boolean(
+                  description: 'Set true ONLY for milestone events that permanently reshape who this person is — founding a company, committing a serious crime, a major public scandal, losing someone irreplaceable, or joining a movement. Approximately once every 10–15 years. Most events should be false.',
+                ),
                 'options': Schema.array(
                   items: Schema.object(
                     properties: {
@@ -226,6 +229,8 @@ CRITICAL RULE FOR OPTIONS: Every option must be a first-person action the PLAYER
   Each outcome_description must be vivid (2-3 sentences) showing how the choice reshapes life going forward, including what was lost or left behind.
 
 CONSEQUENCE RULE: Do not soften consequences. When a choice is reckless, show the fallout — don't let the player escape cleanly. When a choice is "safe," show the quiet cost of choosing safety over growth. Some choices should close doors permanently. Some good choices should have delayed bad consequences. Some bad choices should have unexpected silver linings. Life is not a reward system.
+
+DEFINING MOMENTS: Approximately once every 10–15 years, generate a milestone event (set isDefining: true on the event) — a decision that permanently changes who this person is. These should feel earned given their choices. Most events must be isDefining: false.
 
 IDENTITY CONTINUITY: The "Current Identity State" block above defines who this person IS right now. Never generate events that contradict it — a person with "fame level: unknown" is not already famous; a person with "criminal record: none" has no prior convictions. Events must be consistent with this identity.
 
