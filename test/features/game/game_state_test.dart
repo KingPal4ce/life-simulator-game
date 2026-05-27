@@ -15,6 +15,7 @@ import 'package:retro_life_simulator/services/local_storage_service.dart';
 class FakeLocalStorageService implements ILocalStorageService {
   PlayerStats? _stats;
   String? _outcome;
+  MetaProgress _meta = MetaProgress();
 
   @override
   Future<void> init() async {}
@@ -36,6 +37,12 @@ class FakeLocalStorageService implements ILocalStorageService {
     _stats = null;
     _outcome = null;
   }
+
+  @override
+  void saveMetaProgress(MetaProgress meta) => _meta = meta;
+
+  @override
+  MetaProgress loadMetaProgress() => _meta;
 }
 
 class FakeAIService implements IAIService {
