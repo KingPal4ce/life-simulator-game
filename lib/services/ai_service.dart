@@ -16,6 +16,8 @@ abstract interface class IAIService {
     List<String> lifeLog,
     List<Decision> decisions,
   );
+
+  Future<String?> generateQuietYear(PlayerStats stats);
 }
 
 class AIService implements IAIService {
@@ -279,6 +281,21 @@ Write the story now. Do not list events — tell a story.
       debugPrint('Story Generation Error: $e');
       return 'Their story was one that could not be put into words.';
     }
+  }
+
+  @override
+  Future<String?> generateQuietYear(PlayerStats stats) async {
+    final prompt = 'Write a single short sentence (under 20 words) describing a quiet, '
+        'uneventful year at age ${stats.age} for someone who is ${stats.identityState.occupation}, '
+        '${stats.identityState.relationshipStatus}. No drama. No choices. Just time passing. '
+        'Return ONLY the sentence.';
+    try {
+      final response = await _storyModel.generateContent([Content.text(prompt)]);
+      return response.text?.trim();
+    } catch (e) {
+      debugPrint('Quiet Year Generation Error: $e');
+    }
+    return null;
   }
 
   String _tendency(int value) {

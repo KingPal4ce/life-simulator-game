@@ -83,6 +83,9 @@ class FakeAIService implements IAIService {
     generateStoryCallCount++;
     return 'A life well lived.';
   }
+
+  @override
+  Future<String?> generateQuietYear(PlayerStats stats) async => null;
 }
 
 // ---------------------------------------------------------------------------

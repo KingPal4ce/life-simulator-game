@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../../../models/models.dart';
 import '../../../services/ai_service.dart';
@@ -8,6 +9,7 @@ class GameState extends ChangeNotifier {
   final IAIService aiService;
   final ILocalStorageService localStorageService;
   final Duration _retryDelay;
+  final _random = Random();
 
   PlayerStats stats = PlayerStats();
   GameEvent? currentEvent;
@@ -82,6 +84,17 @@ class GameState extends ChangeNotifier {
     isGeneratingEvent = true;
     eventGenerationFailed = false;
     notifyListeners();
+
+    // Quiet year: ~25% chance for ages 5+ — creates pacing contrast
+    if (stats.age >= 5 && _random.nextDouble() < 0.25) {
+      final quietText = await aiService.generateQuietYear(stats);
+      if (quietText != null) {
+        addLog(quietText);
+        isGeneratingEvent = false; // reset before re-entering via _ageUp
+        _ageUp();
+        return;
+      }
+    }
 
     final recentDecisions = stats.decisions.length > 5
         ? stats.decisions.sublist(stats.decisions.length - 5)
