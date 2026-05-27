@@ -262,6 +262,17 @@ Return ONLY valid JSON.
             .map((d) => '  • Age ${d.age} — faced "${d.eventTitle}". Chose: "${d.choiceText}". What followed: ${d.outcome}')
             .join('\n');
 
+    final lifePathBlock = stats.lifePath != null
+        ? 'Life path: ${stats.lifePath}. The ending should reflect that path specifically — the legacy, regret, and memory that only that life produces. Closing theme: "${_pathEndingFlavor(stats.lifePath)}"\n'
+        : '';
+
+    final identitySummary = 'Identity at death: ${stats.identityState.occupation}, '
+        '${stats.identityState.relationshipStatus}, '
+        'criminal record: ${stats.identityState.criminalRecord}, '
+        'fame: ${stats.identityState.fameLevel}, '
+        'education: ${stats.identityState.education}'
+        '${stats.identityState.majorPastEvents.isEmpty ? '' : ', defining moments: ${stats.identityState.majorPastEvents.join('; ')}'}.';
+
     final prompt = '''
 You are a gifted author writing the story of one person's life. Your story must be DRIVEN by the choices they made — not just a summary of events, but a narrative about how their decisions defined who they became.
 
@@ -274,6 +285,8 @@ Final Stats:
 - Smarts: ${stats.smarts}/100
 - Looks: ${stats.looks}/100
 - Achievements: ${stats.achievements.isEmpty ? 'None' : stats.achievements.join(', ')}
+
+$lifePathBlock$identitySummary
 
 The decisions that shaped this life (in order):
 $decisionNarrative
@@ -311,5 +324,28 @@ Write the story now. Do not list events — tell a story.
     if (value >= 40) return 'moderate';
     if (value >= 20) return 'low';
     return 'very low';
+  }
+
+  String _pathEndingFlavor(String? path) {
+    switch (path) {
+      case 'Criminal':
+        return 'Died in infamy — the city never forgot, and never forgave.';
+      case 'Famous Celebrity':
+        return 'The world mourned loudly for a week, then moved on.';
+      case 'Entrepreneur':
+        return 'Built something that outlasted the builder.';
+      case 'Lonely Genius':
+        return 'Your work was discovered — forty years too late for you to know.';
+      case 'Spiritual Monk':
+        return 'Passed peacefully, surrounded by those whose lives you changed.';
+      case 'Internet Influencer':
+        return 'Thirty million followers. No one who truly knew you.';
+      case 'Activist / Revolutionary':
+        return 'The thing you fought for finally happened — decades after you were gone.';
+      case 'Family Patriarch/Matriarch':
+        return 'The room was full. Every person there was someone you made.';
+      default:
+        return '';
+    }
   }
 }
