@@ -111,8 +111,38 @@ class CallbackSeed {
       );
 }
 
+class MetaProgress {
+  int totalLivesPlayed;
+  List<String> completedLifePaths;
+  List<String> unlockedEndings;
+
+  MetaProgress({
+    this.totalLivesPlayed = 0,
+    this.completedLifePaths = const [],
+    this.unlockedEndings = const [],
+  });
+
+  Map<String, dynamic> toJson() => {
+        'totalLivesPlayed': totalLivesPlayed,
+        'completedLifePaths': completedLifePaths,
+        'unlockedEndings': unlockedEndings,
+      };
+
+  factory MetaProgress.fromJson(Map<String, dynamic> json) => MetaProgress(
+        totalLivesPlayed: json['totalLivesPlayed'] as int? ?? 0,
+        completedLifePaths: (json['completedLifePaths'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
+        unlockedEndings: (json['unlockedEndings'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
+      );
+}
+
 class PlayerStats {
-  static const int schemaVersion = 4;
+  static const int schemaVersion = 5;
 
   int age;
   int happiness;
@@ -135,6 +165,9 @@ class PlayerStats {
   List<String> unresolvedTensions;
   List<CallbackSeed> callbacks;
   String? unlockedEnding;
+  List<String> definingMoments;
+  bool everHealthBelow20;
+  bool everPopularityBelow30;
 
   PlayerStats({
     this.age = 0,
@@ -158,6 +191,9 @@ class PlayerStats {
     this.unresolvedTensions = const [],
     this.callbacks = const [],
     this.unlockedEnding,
+    this.definingMoments = const [],
+    this.everHealthBelow20 = false,
+    this.everPopularityBelow30 = false,
   }) : identityState = identityState ?? IdentityState();
 
   Map<String, dynamic> toJson() => {
@@ -183,6 +219,9 @@ class PlayerStats {
         'unresolvedTensions': unresolvedTensions,
         'callbacks': callbacks.map((c) => c.toJson()).toList(),
         'unlockedEnding': unlockedEnding,
+        'definingMoments': definingMoments,
+        'everHealthBelow20': everHealthBelow20,
+        'everPopularityBelow30': everPopularityBelow30,
       };
 
   factory PlayerStats.fromJson(Map<String, dynamic> json) {
@@ -195,6 +234,7 @@ class PlayerStats {
     final isV1 = version == 1;
     final isPreV3 = version < 3;
     final isPreV4 = version < 4;
+    final isPreV5 = version < 5;
     return PlayerStats(
       age: json['age'] as int? ?? 0,
       happiness: json['happiness'] as int? ?? 80,
@@ -229,6 +269,11 @@ class PlayerStats {
                   .toList() ??
               [],
       unlockedEnding: json['unlockedEnding'] as String?,
+      definingMoments: isPreV5
+          ? []
+          : (json['definingMoments'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      everHealthBelow20: isPreV5 ? false : (json['everHealthBelow20'] as bool? ?? false),
+      everPopularityBelow30: isPreV5 ? false : (json['everPopularityBelow30'] as bool? ?? false),
     );
   }
 }
@@ -311,11 +356,13 @@ class GameEvent {
   final String title;
   final String description;
   final List<EventOption> options;
+  final bool isDefining;
 
   GameEvent({
     required this.title,
     required this.description,
     required this.options,
+    this.isDefining = false,
   });
 
   factory GameEvent.fromJson(Map<String, dynamic> json) {
@@ -325,6 +372,7 @@ class GameEvent {
       options: (json['options'] as List<dynamic>? ?? [])
           .map((e) => EventOption.fromJson(e as Map<String, dynamic>))
           .toList(),
+      isDefining: json['isDefining'] as bool? ?? false,
     );
   }
 }
