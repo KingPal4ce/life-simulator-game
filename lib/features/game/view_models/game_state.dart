@@ -102,6 +102,11 @@ class GameState extends ChangeNotifier {
 
   void selectOption(EventOption option) {
     StatsManager.applyOptionEffects(stats, option);
+    _updateIdentityState(option);
+
+    if (option.involvedNPC != null && !stats.npcSeeds.contains(option.involvedNPC)) {
+      stats.npcSeeds = List.from(stats.npcSeeds)..add(option.involvedNPC!);
+    }
 
     final outcome = option.outcomeDescription.isNotEmpty
         ? option.outcomeDescription
@@ -158,6 +163,33 @@ class GameState extends ChangeNotifier {
     stats.age++;
     _saveState();
     if (isDead) { _triggerLifeStory(); } else { _triggerNextEvent(); }
+  }
+
+  void _updateIdentityState(EventOption chosenOption) {
+    final id = stats.identityState;
+
+    if (chosenOption.occupationUpdate != null) {
+      id.occupation = chosenOption.occupationUpdate!;
+    }
+    if (chosenOption.relationshipUpdate != null) {
+      id.relationshipStatus = chosenOption.relationshipUpdate!;
+    }
+    if (chosenOption.criminalRecordUpdate != null) {
+      id.criminalRecord = chosenOption.criminalRecordUpdate!;
+    }
+    if (chosenOption.fameLevelUpdate != null) {
+      id.fameLevel = chosenOption.fameLevelUpdate!;
+    }
+    if (chosenOption.majorEventNote != null) {
+      final events = List<String>.from(id.majorPastEvents)
+        ..add(chosenOption.majorEventNote!);
+      id.majorPastEvents = events.length > 5 ? events.sublist(events.length - 5) : events;
+    }
+
+    // Age-based education progression (automatic, no AI signal needed)
+    if (stats.age == 18 && id.education == 'no degree') {
+      id.education = 'high school';
+    }
   }
 
   void _checkAchievements() {
