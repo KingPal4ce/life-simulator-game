@@ -20,6 +20,10 @@ class GameState extends ChangeNotifier {
   String? currentConsequence;
   EventOption? lastChosenOption;
 
+  // Theme pack (null = Modern Life / default)
+  String? selectedTheme;
+  Map<String, bool> unlockedThemes = {};
+
   // Life story fields
   String? lifeStory;
   String? lifeStoryHeadline;
@@ -56,6 +60,9 @@ class GameState extends ChangeNotifier {
   void loadOrStartGame() {
     final loadedStats = localStorageService.loadStats();
     metaProgress = localStorageService.loadMetaProgress();
+    final themeSettings = localStorageService.loadThemeSettings();
+    selectedTheme = themeSettings.selectedTheme;
+    unlockedThemes = themeSettings.unlockedThemes;
 
     if (loadedStats != null) {
       stats = loadedStats;
@@ -94,6 +101,13 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setTheme(String? theme) {
+    selectedTheme = theme;
+    final themeSettings = localStorageService.loadThemeSettings();
+    localStorageService.saveThemeSettings(theme, themeSettings.unlockedThemes);
+    notifyListeners();
+  }
+
   void _saveState() {
     localStorageService.saveSession(stats, previousOutcome);
   }
@@ -122,7 +136,12 @@ class GameState extends ChangeNotifier {
 
     GameEvent? event;
     for (var attempt = 0; attempt < 3; attempt++) {
-      event = await aiService.generateNextEvent(stats, previousOutcome, recentDecisions);
+      event = await aiService.generateNextEvent(
+        stats,
+        previousOutcome,
+        recentDecisions,
+        themePack: selectedTheme,
+      );
       if (event != null) break;
       if (attempt < 2 && _retryDelay.inMicroseconds > 0) await Future.delayed(_retryDelay);
     }
