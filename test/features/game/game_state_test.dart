@@ -98,7 +98,7 @@ class FakeAIService implements IAIService {
   }
 
   @override
-  Future<LifeStoryResult> generateLifeStory(
+  Future<LifeStoryResult?> generateLifeStory(
     PlayerStats stats,
     List<String> lifeLog,
     List<Decision> decisions,
