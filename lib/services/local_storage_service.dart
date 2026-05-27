@@ -9,12 +9,15 @@ abstract interface class ILocalStorageService {
   PlayerStats? loadStats();
   String? loadPreviousOutcome();
   void clearSession();
+  void saveMetaProgress(MetaProgress meta);
+  MetaProgress loadMetaProgress();
 }
 
 class LocalStorageService implements ILocalStorageService {
   static const String boxName = 'gameBox';
   static const String sessionKey = 'session';
   static const String previousOutcomeKey = 'previousOutcome';
+  static const String metaProgressKey = 'metaProgress';
 
   @override
   Future<void> init() async {
@@ -55,5 +58,25 @@ class LocalStorageService implements ILocalStorageService {
     final box = Hive.box(boxName);
     box.delete(sessionKey);
     box.delete(previousOutcomeKey);
+  }
+
+  @override
+  void saveMetaProgress(MetaProgress meta) {
+    final box = Hive.box(boxName);
+    box.put(metaProgressKey, jsonEncode(meta.toJson()));
+  }
+
+  @override
+  MetaProgress loadMetaProgress() {
+    final box = Hive.box(boxName);
+    final saved = box.get(metaProgressKey);
+    if (saved != null) {
+      try {
+        return MetaProgress.fromJson(jsonDecode(saved));
+      } catch (e) {
+        debugPrint('LocalStorageService: failed to load meta progress: $e');
+      }
+    }
+    return MetaProgress();
   }
 }
