@@ -108,6 +108,17 @@ class GameState extends ChangeNotifier {
       stats.npcSeeds = List.from(stats.npcSeeds)..add(option.involvedNPC!);
     }
 
+    _evaluateLifePath();
+
+    // Tension tracking: resolve before adding so a single option can swap tensions cleanly
+    if (option.resolvesTension == true && stats.unresolvedTensions.isNotEmpty) {
+      stats.unresolvedTensions = List.from(stats.unresolvedTensions)..removeAt(0);
+    }
+    if (option.newTension != null) {
+      final tensions = List<String>.from(stats.unresolvedTensions)..add(option.newTension!);
+      stats.unresolvedTensions = tensions.length > 3 ? tensions.sublist(tensions.length - 3) : tensions;
+    }
+
     final outcome = option.outcomeDescription.isNotEmpty
         ? option.outcomeDescription
         : 'You chose to ${option.text}.';
@@ -163,6 +174,33 @@ class GameState extends ChangeNotifier {
     stats.age++;
     _saveState();
     if (isDead) { _triggerLifeStory(); } else { _triggerNextEvent(); }
+  }
+
+  void _evaluateLifePath() {
+    final s = stats;
+    String? matched;
+
+    if (s.morality <= 25 && s.greed >= 60) {
+      matched = 'Criminal';
+    } else if (s.morality >= 85 && s.happiness >= 70 && s.wealth <= 35) {
+      matched = 'Spiritual Monk';
+    } else if (s.smarts >= 80 && s.popularity <= 30) {
+      matched = 'Lonely Genius';
+    } else if (s.wealth >= 65 && s.discipline >= 60 && s.greed >= 50) {
+      matched = 'Entrepreneur';
+    } else if (s.popularity >= 75 && s.looks >= 65) {
+      matched = 'Famous Celebrity';
+    } else if (s.popularity >= 70 && s.creativity >= 65 && s.age <= 35) {
+      matched = 'Internet Influencer';
+    } else if (s.morality >= 75 && s.popularity >= 60 && s.greed <= 30) {
+      matched = 'Activist / Revolutionary';
+    } else if (s.happiness >= 75 && s.morality >= 65 && s.greed <= 40) {
+      matched = 'Family Patriarch/Matriarch';
+    }
+
+    if (matched != null) {
+      stats.lifePath = matched;
+    }
   }
 
   void _updateIdentityState(EventOption chosenOption) {

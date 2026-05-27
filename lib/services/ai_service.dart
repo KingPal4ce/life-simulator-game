@@ -98,6 +98,12 @@ class AIService implements IAIService {
                       'involvedNPC': Schema.string(
                         description: 'The first name (or name + role) of a specific person who is central to this outcome — a friend, rival, mentor, romantic interest, or stranger who matters. Set this when the outcome features a named individual the player might encounter again. Leave null for outcomes with no specific person involved.',
                       ),
+                      'newTension': Schema.string(
+                        description: 'A short phrase describing a new unresolved conflict this choice opens — an ongoing debt, rivalry, estrangement, criminal risk, or commitment that will haunt future events. Only set when the choice genuinely opens a lasting conflict thread. Leave null otherwise.',
+                      ),
+                      'resolvesTension': Schema.boolean(
+                        description: 'Set true if this choice definitively closes or resolves one of the player\'s existing unresolved tensions. Only set true when the resolution is meaningful and earned — not just vaguely related. Leave null or false otherwise.',
+                      ),
                     },
                     requiredProperties: [
                       'text',
@@ -154,6 +160,17 @@ ${stats.identityState.majorPastEvents.isEmpty ? '' : '- Major past events: ${sta
         ? ''
         : 'Known people in this person\'s life: ${stats.npcSeeds.join(', ')}. You may reintroduce any of them when it fits naturally — do not force it.\n';
 
+    final tensionsBlock = stats.unresolvedTensions.isEmpty
+        ? ''
+        : '''
+Unresolved Tensions (ongoing conflicts — escalate these when appropriate; do not reset tone):
+${stats.unresolvedTensions.map((t) => '  • $t').join('\n')}
+''';
+
+    final lifePathBlock = stats.lifePath != null
+        ? 'Current Life Path: ${stats.lifePath}. Events should reflect the opportunities and pressures of that life — include elements that only someone on this specific path would face.\n'
+        : '';
+
     final hiddenStatsBlock = '''
 Character Tendencies (internal — use these to shape event tone and option weighting, not to expose as numbers):
 - Morality: ${_tendency(stats.morality)} (${stats.morality}/100)
@@ -176,7 +193,7 @@ Current Stats:
 - Smarts: ${stats.smarts}/100
 - Looks: ${stats.looks}/100
 
-$hiddenStatsBlock$identityBlock
+$hiddenStatsBlock$identityBlock$tensionsBlock$lifePathBlock
 $npcContext$contextLine
 
 Past decisions (background context — do NOT force a direct connection):
@@ -198,6 +215,10 @@ CRITICAL RULE FOR OPTIONS: Every option must be a first-person action the PLAYER
 CONSEQUENCE RULE: Do not soften consequences. When a choice is reckless, show the fallout — don't let the player escape cleanly. When a choice is "safe," show the quiet cost of choosing safety over growth. Some choices should close doors permanently. Some good choices should have delayed bad consequences. Some bad choices should have unexpected silver linings. Life is not a reward system.
 
 IDENTITY CONTINUITY: The "Current Identity State" block above defines who this person IS right now. Never generate events that contradict it — a person with "fame level: unknown" is not already famous; a person with "criminal record: none" has no prior convictions. Events must be consistent with this identity.
+
+TENSION TRACKING: If a chosen option genuinely opens a new lasting conflict (a debt owed, a rivalry ignited, a criminal risk taken, an estrangement caused), set newTension to a short phrase describing it. If a chosen option definitively resolves one of the listed unresolved tensions, set resolvesTension to true. Do not use these fields for minor, forgettable consequences — only for conflicts that will meaningfully shape the player's future.
+
+TENSION ESCALATION: When unresolved tensions exist, escalate them when dramatically appropriate rather than resetting tone each year. Life events should build on previous risks and create rising stakes — a debt grows, a rivalry intensifies, an estrangement deepens.
 
 HIDDEN STAT GUIDANCE: For each option, set hidden stat effects only when the choice clearly warrants it — a moral/ethical choice should adjust moralityEffect; a social/reputation-driven choice should adjust popularityEffect or reputationEffect; a financial or power-seeking choice should adjust wealthEffect or greedEffect. Leave unrelated hidden stat fields at 0. Do not assign hidden stat values arbitrarily — most options should only affect 1–2 hidden stats at most.
 
