@@ -12,6 +12,7 @@ class GameState extends ChangeNotifier {
   final _random = Random();
 
   PlayerStats stats = PlayerStats();
+  MetaProgress metaProgress = MetaProgress();
   GameEvent? currentEvent;
   bool isGeneratingEvent = false;
   bool eventGenerationFailed = false;
@@ -25,10 +26,22 @@ class GameState extends ChangeNotifier {
 
   bool get isDead => stats.health <= 0 || stats.age >= 100;
 
-  // Achievement definitions — add new entries here to extend the system.
   static final List<({String name, bool Function(PlayerStats) condition})> _achievementDefs = [
     (name: 'Centenarian in Training', condition: (s) => s.age >= 80),
     (name: 'Absolute Bliss', condition: (s) => s.happiness == 100),
+    (name: 'Rock Bottom', condition: (s) => s.health <= 0 && s.age < 50),
+    (name: 'Eternal Youth', condition: (s) => s.looks >= 90 && s.age >= 60),
+    (name: 'Bookworm', condition: (s) => s.smarts >= 100),
+    (name: 'Never Grew Up', condition: (s) => s.happiness >= 90 && s.age >= 40),
+    (name: 'The Grind', condition: (s) => s.discipline >= 90),
+    (name: 'Popular Kid', condition: (s) => s.popularity >= 90),
+    (name: 'Morally Bankrupt', condition: (s) => s.morality <= 10),
+    (name: 'Saint', condition: (s) => s.morality >= 95),
+    (name: 'Self-Made', condition: (s) => s.wealth >= 80),
+    (name: 'The Creative', condition: (s) => s.creativity >= 85),
+    (name: 'Social Climber', condition: (s) => s.everPopularityBelow30 && s.popularity >= 70),
+    (name: 'Survived Chaos', condition: (s) => s.everHealthBelow20 && s.health >= 60),
+    (name: 'Jack of All Stats', condition: (s) => s.happiness >= 60 && s.health >= 60 && s.smarts >= 60 && s.looks >= 60),
   ];
 
   GameState({
@@ -39,6 +52,7 @@ class GameState extends ChangeNotifier {
 
   void loadOrStartGame() {
     final loadedStats = localStorageService.loadStats();
+    metaProgress = localStorageService.loadMetaProgress();
 
     if (loadedStats != null) {
       stats = loadedStats;
@@ -150,6 +164,11 @@ class GameState extends ChangeNotifier {
 
     _evaluateLifePath();
 
+    if (currentEvent?.isDefining == true) {
+      stats.definingMoments = List.from(stats.definingMoments)
+        ..add('Age ${stats.age}: ${option.text}');
+    }
+
     // Tension tracking: resolve before adding so a single option can swap tensions cleanly
     if (option.resolvesTension == true && stats.unresolvedTensions.isNotEmpty) {
       stats.unresolvedTensions = List.from(stats.unresolvedTensions)..removeAt(0);
@@ -197,7 +216,26 @@ class GameState extends ChangeNotifier {
     _triggerLifeStory();
   }
 
+  Future<void> retryLifeStory() async {
+    if (isGeneratingStory || !isDead) return;
+    isGeneratingStory = true;
+    lifeStory = null;
+    notifyListeners();
+    lifeStory = await aiService.generateLifeStory(stats, stats.lifeLog, stats.decisions);
+    isGeneratingStory = false;
+    notifyListeners();
+  }
+
   Future<void> _triggerLifeStory() async {
+    metaProgress.totalLivesPlayed++;
+    if (stats.lifePath != null && !metaProgress.completedLifePaths.contains(stats.lifePath)) {
+      metaProgress.completedLifePaths = List.from(metaProgress.completedLifePaths)..add(stats.lifePath!);
+    }
+    if (stats.unlockedEnding != null && !metaProgress.unlockedEndings.contains(stats.unlockedEnding)) {
+      metaProgress.unlockedEndings = List.from(metaProgress.unlockedEndings)..add(stats.unlockedEnding!);
+    }
+    localStorageService.saveMetaProgress(metaProgress);
+
     isGeneratingStory = true;
     lifeStory = null;
     notifyListeners();
@@ -271,6 +309,12 @@ class GameState extends ChangeNotifier {
   }
 
   void _checkAchievements() {
+    if (stats.health < 20 && !stats.everHealthBelow20) {
+      stats.everHealthBelow20 = true;
+    }
+    if (stats.popularity <= 30 && !stats.everPopularityBelow30) {
+      stats.everPopularityBelow30 = true;
+    }
     for (final def in _achievementDefs) {
       if (def.condition(stats) && !stats.achievements.contains(def.name)) {
         stats.achievements = List.from(stats.achievements)..add(def.name);
