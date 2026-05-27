@@ -45,7 +45,7 @@ class DeathScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: ListView(
                 children: [
-                  if (state.metaProgress.totalLivesPlayed > 0) ...[
+                  if (state.metaProgress.totalLivesPlayed > 1) ...[
                     const Text(
                       'YOUR LEGACY',
                       style: TextStyle(
