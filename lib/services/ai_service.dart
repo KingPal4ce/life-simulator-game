@@ -11,7 +11,7 @@ abstract interface class IAIService {
     List<Decision> recentDecisions,
   );
 
-  Future<String> generateLifeStory(
+  Future<LifeStoryResult> generateLifeStory(
     PlayerStats stats,
     List<String> lifeLog,
     List<Decision> decisions,
@@ -130,6 +130,24 @@ class AIService implements IAIService {
           apiKey: apiKey,
           generationConfig: GenerationConfig(
             temperature: 1.0,
+            responseMimeType: 'application/json',
+            responseSchema: Schema.object(
+              properties: {
+                'headline': Schema.string(
+                  description: 'A single punchy newspaper-style headline about this person\'s life — under 15 words. Should be memorable and shareable.',
+                ),
+                'personalityType': Schema.string(
+                  description: 'A 3-5 word personality archetype label for this person, like "The Reluctant Hero", "The Joyful Wanderer", "The Calculating Opportunist", or "The Quiet Saint". Should reflect who they became.',
+                ),
+                'story': Schema.string(
+                  description: 'Exactly 2-3 short paragraphs in third-person, like a brief but moving eulogy. Be concise and emotionally resonant. Every sentence must earn its place. Capture who they were, what shaped them, and the mark they left behind. Do not pad or over-explain.',
+                ),
+                'worldLost': Schema.string(
+                  description: 'A single evocative sentence about what the world lost when this person died. Not sentimental — specific to who they were.',
+                ),
+              },
+              requiredProperties: ['headline', 'personalityType', 'story', 'worldLost'],
+            ),
           ),
         );
 
@@ -150,16 +168,7 @@ class AIService implements IAIService {
         ? 'Recent context (for background only, NOT required to drive the event): "$previousOutcome"'
         : 'No specific recent context — something new is about to happen.';
 
-    final identityBlock = '''
-Current Identity State:
-- Occupation: ${stats.identityState.occupation}
-- Age: ${stats.age}
-- Relationship status: ${stats.identityState.relationshipStatus}
-- Criminal record: ${stats.identityState.criminalRecord}
-- Fame level: ${stats.identityState.fameLevel}
-- Education: ${stats.identityState.education}
-${stats.identityState.majorPastEvents.isEmpty ? '' : '- Major past events: ${stats.identityState.majorPastEvents.join('; ')}'}
-''';
+    final narrativeSummary = _buildNarrativeSummary(stats);
 
     final npcContext = stats.npcSeeds.isEmpty
         ? ''
@@ -201,18 +210,19 @@ Character Tendencies (internal — use these to shape event tone and option weig
     final prompt = '''
 You are the narrator of an immersive life simulator. A year has passed in this person's life.
 
-The player is ${stats.age} years old.
-
 Current Stats:
 - Happiness: ${stats.happiness}/100
 - Health: ${stats.health}/100
 - Smarts: ${stats.smarts}/100
 - Looks: ${stats.looks}/100
+- Age: ${stats.age}
 
-$hiddenStatsBlock$identityBlock$tensionsBlock$lifePathBlock$midLifeCrisisBlock$callbackBlock
+$narrativeSummary
+
+$hiddenStatsBlock$tensionsBlock$lifePathBlock$midLifeCrisisBlock$callbackBlock
 $npcContext$contextLine
 
-Past decisions (background context — do NOT force a direct connection):
+Recent decisions (background context — do NOT force a direct connection):
 $decisionContext
 
 IMPORTANT — VARIETY RULE: Life does not always follow a direct script. Generate an age-appropriate event that feels natural for someone who is ${stats.age} years old. The event can be:
@@ -232,7 +242,7 @@ CONSEQUENCE RULE: Do not soften consequences. When a choice is reckless, show th
 
 DEFINING MOMENTS: Approximately once every 10–15 years, generate a milestone event (set isDefining: true on the event) — a decision that permanently changes who this person is. These should feel earned given their choices. Most events must be isDefining: false.
 
-IDENTITY CONTINUITY: The "Current Identity State" block above defines who this person IS right now. Never generate events that contradict it — a person with "fame level: unknown" is not already famous; a person with "criminal record: none" has no prior convictions. Events must be consistent with this identity.
+IDENTITY CONTINUITY: The narrative summary above defines who this person IS right now. Never generate events that contradict it — a person with unknown fame is not already famous; a person with no criminal record has no prior convictions. Events must be consistent with this identity.
 
 TENSION TRACKING: If a chosen option genuinely opens a new lasting conflict (a debt owed, a rivalry ignited, a criminal risk taken, an estrangement caused), set newTension to a short phrase describing it. If a chosen option definitively resolves one of the listed unresolved tensions, set resolvesTension to true. Do not use these fields for minor, forgettable consequences — only for conflicts that will meaningfully shape the player's future.
 
@@ -256,7 +266,7 @@ Return ONLY valid JSON.
   }
 
   @override
-  Future<String> generateLifeStory(
+  Future<LifeStoryResult> generateLifeStory(
     PlayerStats stats,
     List<String> lifeLog,
     List<Decision> decisions,
@@ -279,9 +289,7 @@ Return ONLY valid JSON.
         '${stats.identityState.majorPastEvents.isEmpty ? '' : ', defining moments: ${stats.identityState.majorPastEvents.join('; ')}'}.';
 
     final prompt = '''
-You are a gifted author writing the story of one person's life. Your story must be DRIVEN by the choices they made — not just a summary of events, but a narrative about how their decisions defined who they became.
-
-Write exactly 2-3 short paragraphs in third-person, like a brief but moving eulogy. Be concise and emotionally resonant — every sentence must earn its place. Capture who they were, what shaped them, and the mark they left behind. End with one reflective sentence about their legacy. Do not pad or over-explain.
+You are a gifted author writing the story of one person's life. Populate the four JSON fields — headline, personalityType, story, and worldLost — as described. Your writing must be DRIVEN by the choices they made — not just a summary of events, but a narrative about how their decisions defined who they became.
 
 Final Stats:
 - Age reached: ${stats.age}
@@ -296,16 +304,29 @@ $lifePathBlock$identitySummary
 The decisions that shaped this life (in order):
 $decisionNarrative
 
-Write the story now. Do not list events — tell a story.
+Do not list events — tell a story.
 ''';
 
     try {
       final response = await _storyModel.generateContent([Content.text(prompt)]);
-      return response.text ?? 'Their story was one that could not be put into words.';
+      if (response.text != null) {
+        final data = jsonDecode(response.text!) as Map<String, dynamic>;
+        return LifeStoryResult(
+          headline: data['headline'] as String? ?? '',
+          personalityType: data['personalityType'] as String? ?? '',
+          story: data['story'] as String? ?? 'Their story was one that could not be put into words.',
+          worldLost: data['worldLost'] as String? ?? '',
+        );
+      }
     } catch (e) {
       debugPrint('Story Generation Error: $e');
-      return 'Their story was one that could not be put into words.';
     }
+    return LifeStoryResult(
+      headline: '',
+      personalityType: '',
+      story: 'Their story was one that could not be put into words.',
+      worldLost: '',
+    );
   }
 
   @override
@@ -321,6 +342,54 @@ Write the story now. Do not list events — tell a story.
       debugPrint('Quiet Year Generation Error: $e');
     }
     return null;
+  }
+
+  String _buildNarrativeSummary(PlayerStats stats) {
+    final id = stats.identityState;
+    final parts = <String>[];
+
+    final pathClause = stats.lifePath != null ? ' on the path of a ${stats.lifePath}' : '';
+    parts.add('${id.occupation.isEmpty ? 'Someone' : id.occupation.replaceFirst(id.occupation[0], id.occupation[0].toUpperCase())}$pathClause at age ${stats.age}');
+
+    if (id.relationshipStatus != 'single') {
+      parts.add(id.relationshipStatus);
+    }
+
+    if (id.fameLevel != 'unknown') {
+      parts.add('${id.fameLevel} fame');
+    }
+
+    if (id.criminalRecord != 'none') {
+      parts.add('criminal record: ${id.criminalRecord}');
+    }
+
+    if (id.education != 'no degree') {
+      parts.add(id.education);
+    }
+
+    if (id.majorPastEvents.isNotEmpty) {
+      final recent = id.majorPastEvents.length > 2
+          ? id.majorPastEvents.sublist(id.majorPastEvents.length - 2)
+          : id.majorPastEvents;
+      parts.add(recent.join('; '));
+    }
+
+    if (stats.unresolvedTensions.isNotEmpty) {
+      parts.add('facing: ${stats.unresolvedTensions.join(', ')}');
+    }
+
+    final tendencyParts = <String>[];
+    if (stats.discipline >= 60 || stats.discipline <= 40) {
+      tendencyParts.add('discipline is ${_tendency(stats.discipline)}');
+    }
+    if (stats.morality >= 60 || stats.morality <= 40) {
+      tendencyParts.add('morality is ${_tendency(stats.morality)}');
+    }
+    if (tendencyParts.isNotEmpty) {
+      parts.add(tendencyParts.join('; '));
+    }
+
+    return '${parts.join(' — ')}.';
   }
 
   String _tendency(int value) {
