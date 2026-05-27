@@ -247,10 +247,12 @@ class GameState extends ChangeNotifier {
     lifeStory = null;
     notifyListeners();
     final result = await aiService.generateLifeStory(stats, stats.lifeLog, stats.decisions);
-    lifeStory = result.story;
-    lifeStoryHeadline = result.headline.isNotEmpty ? result.headline : null;
-    lifeStoryPersonalityType = result.personalityType.isNotEmpty ? result.personalityType : null;
-    lifeStoryWorldLost = result.worldLost.isNotEmpty ? result.worldLost : null;
+    if (result != null) {
+      lifeStory = result.story;
+      lifeStoryHeadline = result.headline.isNotEmpty ? result.headline : null;
+      lifeStoryPersonalityType = result.personalityType.isNotEmpty ? result.personalityType : null;
+      lifeStoryWorldLost = result.worldLost.isNotEmpty ? result.worldLost : null;
+    }
     isGeneratingStory = false;
     notifyListeners();
   }
@@ -273,10 +275,12 @@ class GameState extends ChangeNotifier {
     notifyListeners();
 
     final result = await aiService.generateLifeStory(stats, stats.lifeLog, stats.decisions);
-    lifeStory = result.story;
-    lifeStoryHeadline = result.headline.isNotEmpty ? result.headline : null;
-    lifeStoryPersonalityType = result.personalityType.isNotEmpty ? result.personalityType : null;
-    lifeStoryWorldLost = result.worldLost.isNotEmpty ? result.worldLost : null;
+    if (result != null) {
+      lifeStory = result.story;
+      lifeStoryHeadline = result.headline.isNotEmpty ? result.headline : null;
+      lifeStoryPersonalityType = result.personalityType.isNotEmpty ? result.personalityType : null;
+      lifeStoryWorldLost = result.worldLost.isNotEmpty ? result.worldLost : null;
+    }
 
     isGeneratingStory = false;
     notifyListeners();
