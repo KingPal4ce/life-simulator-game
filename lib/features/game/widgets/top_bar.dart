@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/app_colors.dart';
 import '../view_models/game_state.dart';
+import '../screens/settings_screen.dart';
 import 'life_log_list_view.dart' show lifeStageForAge;
 
 class TopBar extends StatelessWidget {
@@ -61,6 +62,22 @@ class TopBar extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
+                Icons.flag_outlined,
+                color: Colors.white70,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: () => _openSettings(context),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
                 Icons.settings,
                 color: Colors.white70,
                 size: 20,
@@ -68,6 +85,14 @@ class TopBar extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _openSettings(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SettingsScreen(state: state),
       ),
     );
   }
