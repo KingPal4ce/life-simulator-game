@@ -69,7 +69,7 @@ class Decision {
 }
 
 class PlayerStats {
-  static const int schemaVersion = 2;
+  static const int schemaVersion = 3;
 
   int age;
   int happiness;
@@ -88,6 +88,8 @@ class PlayerStats {
   List<Decision> decisions;
   IdentityState identityState;
   List<String> npcSeeds;
+  String? lifePath;
+  List<String> unresolvedTensions;
 
   PlayerStats({
     this.age = 0,
@@ -107,6 +109,8 @@ class PlayerStats {
     this.decisions = const [],
     IdentityState? identityState,
     this.npcSeeds = const [],
+    this.lifePath,
+    this.unresolvedTensions = const [],
   }) : identityState = identityState ?? IdentityState();
 
   Map<String, dynamic> toJson() => {
@@ -128,16 +132,19 @@ class PlayerStats {
         'decisions': decisions.map((d) => d.toJson()).toList(),
         'identityState': identityState.toJson(),
         'npcSeeds': npcSeeds,
+        'lifePath': lifePath,
+        'unresolvedTensions': unresolvedTensions,
       };
 
   factory PlayerStats.fromJson(Map<String, dynamic> json) {
     final version = json['schemaVersion'] as int?;
-    if (version == null || (version != 1 && version != schemaVersion)) {
+    if (version == null || version < 1 || version > schemaVersion) {
       throw FormatException(
         'PlayerStats schema version mismatch: expected $schemaVersion, got $version',
       );
     }
     final isV1 = version == 1;
+    final isPreV3 = version < 3;
     return PlayerStats(
       age: json['age'] as int? ?? 0,
       happiness: json['happiness'] as int? ?? 80,
@@ -161,6 +168,10 @@ class PlayerStats {
           ? IdentityState.fromJson(json['identityState'] as Map<String, dynamic>)
           : IdentityState(),
       npcSeeds: (json['npcSeeds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      lifePath: isPreV3 ? null : (json['lifePath'] as String?),
+      unresolvedTensions: isPreV3
+          ? []
+          : (json['unresolvedTensions'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
     );
   }
 }
@@ -185,6 +196,8 @@ class EventOption {
   final String? fameLevelUpdate;
   final String? majorEventNote;
   final String? involvedNPC;
+  final String? newTension;
+  final bool? resolvesTension;
 
   EventOption({
     required this.text,
@@ -206,6 +219,8 @@ class EventOption {
     this.fameLevelUpdate,
     this.majorEventNote,
     this.involvedNPC,
+    this.newTension,
+    this.resolvesTension,
   });
 
   factory EventOption.fromJson(Map<String, dynamic> json) {
@@ -229,6 +244,8 @@ class EventOption {
       fameLevelUpdate: json['fameLevelUpdate'] as String?,
       majorEventNote: json['majorEventNote'] as String?,
       involvedNPC: json['involvedNPC'] as String?,
+      newTension: json['newTension'] as String?,
+      resolvesTension: json['resolvesTension'] as bool?,
     );
   }
 }
