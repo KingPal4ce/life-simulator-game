@@ -188,7 +188,14 @@ IMPORTANT — VARIETY RULE: Life does not always follow a direct script. Generat
   • A distant echo of an older decision resurfacing years later
 Do NOT make every event feel like an immediate consequence of the last choice. Mix it up.
 
-CRITICAL RULE FOR OPTIONS: Every option must be a first-person action the PLAYER themselves takes — never a parent, teacher, or other character. Bad: "My parents sign me up for tutoring." Good: "I ask my teacher for extra help after school." Write 3 options with meaningfully different consequences (one risky, one safe, one creative/unusual). Each outcome_description must be vivid (2-3 sentences) showing how the choice reshapes life going forward.
+CRITICAL RULE FOR OPTIONS: Every option must be a first-person action the PLAYER themselves takes — never a parent, teacher, or other character. Bad: "My parents sign me up for tutoring." Good: "I ask my teacher for extra help after school." Write 3 options with genuinely different consequences:
+  • Each option MUST have at least one real cost or downside — no free wins
+  • Create identity dilemmas, not obvious good/bad splits — both the "safe" and "risky" options should have legitimate appeal and legitimate consequences
+  • Bittersweet, ironic, and tragic outcomes are strongly preferred over purely positive resolutions
+  • Create moments the player will remember or regret — not sanitized life advice
+  Each outcome_description must be vivid (2-3 sentences) showing how the choice reshapes life going forward, including what was lost or left behind.
+
+CONSEQUENCE RULE: Do not soften consequences. When a choice is reckless, show the fallout — don't let the player escape cleanly. When a choice is "safe," show the quiet cost of choosing safety over growth. Some choices should close doors permanently. Some good choices should have delayed bad consequences. Some bad choices should have unexpected silver linings. Life is not a reward system.
 
 IDENTITY CONTINUITY: The "Current Identity State" block above defines who this person IS right now. Never generate events that contradict it — a person with "fame level: unknown" is not already famous; a person with "criminal record: none" has no prior convictions. Events must be consistent with this identity.
 
