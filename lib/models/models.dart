@@ -1,3 +1,17 @@
+class LifeStoryResult {
+  final String headline;
+  final String personalityType;
+  final String story;
+  final String worldLost;
+
+  LifeStoryResult({
+    required this.headline,
+    required this.personalityType,
+    required this.story,
+    required this.worldLost,
+  });
+}
+
 class IdentityState {
   String occupation;
   String relationshipStatus;
