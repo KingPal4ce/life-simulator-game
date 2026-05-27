@@ -107,6 +107,14 @@ class GameState extends ChangeNotifier {
       if (attempt < 2 && _retryDelay.inMicroseconds > 0) await Future.delayed(_retryDelay);
     }
 
+    // Remove callbacks that were due this year — they were surfaced to the AI
+    final activeCallbacks = List<CallbackSeed>.from(stats.callbacks)
+      ..removeWhere((c) => stats.age >= c.callbackAgeMin && stats.age <= c.callbackAgeMax);
+    if (activeCallbacks.length != stats.callbacks.length) {
+      stats.callbacks = activeCallbacks;
+      _saveState();
+    }
+
     currentEvent = event;
     if (event == null) eventGenerationFailed = true;
     isGeneratingEvent = false;
@@ -116,6 +124,25 @@ class GameState extends ChangeNotifier {
   void selectOption(EventOption option) {
     StatsManager.applyOptionEffects(stats, option);
     _updateIdentityState(option);
+
+    final hiddenDeltas = [
+      option.moralityEffect, option.disciplineEffect, option.popularityEffect,
+      option.creativityEffect, option.wealthEffect, option.greedEffect, option.reputationEffect,
+    ];
+    if (hiddenDeltas.any((d) => d.abs() >= 15) || option.involvedNPC != null) {
+      final seed = CallbackSeed(
+        seedAge: stats.age,
+        seedDescription: option.outcomeDescription.isNotEmpty
+            ? option.outcomeDescription
+            : 'You chose to ${option.text}.',
+        emotionalTag: _deriveEmotionalTag(option),
+        involvedNPC: option.involvedNPC,
+        possibleReturnTypes: const ['reunion', 'consequence', 'rumor'],
+        callbackAgeMin: stats.age + 5,
+        callbackAgeMax: stats.age + 25,
+      );
+      stats.callbacks = List.from(stats.callbacks)..add(seed);
+    }
 
     if (option.involvedNPC != null && !stats.npcSeeds.contains(option.involvedNPC)) {
       stats.npcSeeds = List.from(stats.npcSeeds)..add(option.involvedNPC!);
@@ -250,5 +277,16 @@ class GameState extends ChangeNotifier {
         addLog('Achievement Unlocked: ${def.name}!');
       }
     }
+  }
+
+  String _deriveEmotionalTag(EventOption option) {
+    if (option.moralityEffect <= -10) return 'betrayal';
+    if (option.moralityEffect >= 10) return 'kindness';
+    if (option.greedEffect >= 10 || option.wealthEffect >= 10) return 'ambition';
+    if (option.creativityEffect >= 10) return 'creativity';
+    if (option.popularityEffect >= 10) return 'connection';
+    if (option.healthEffect <= -15) return 'recklessness';
+    if (option.disciplineEffect >= 10) return 'dedication';
+    return 'moment';
   }
 }

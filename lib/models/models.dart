@@ -68,8 +68,51 @@ class Decision {
   String toString() => 'Age $age — "$eventTitle": chose "$choiceText" → $outcome';
 }
 
+class CallbackSeed {
+  final int seedAge;
+  final String seedDescription;
+  final String emotionalTag;
+  final String? involvedNPC;
+  final List<String> possibleReturnTypes;
+  final int callbackAgeMin;
+  final int callbackAgeMax;
+
+  CallbackSeed({
+    required this.seedAge,
+    required this.seedDescription,
+    required this.emotionalTag,
+    this.involvedNPC,
+    required this.possibleReturnTypes,
+    required this.callbackAgeMin,
+    required this.callbackAgeMax,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'seedAge': seedAge,
+        'seedDescription': seedDescription,
+        'emotionalTag': emotionalTag,
+        'involvedNPC': involvedNPC,
+        'possibleReturnTypes': possibleReturnTypes,
+        'callbackAgeMin': callbackAgeMin,
+        'callbackAgeMax': callbackAgeMax,
+      };
+
+  factory CallbackSeed.fromJson(Map<String, dynamic> json) => CallbackSeed(
+        seedAge: json['seedAge'] as int? ?? 0,
+        seedDescription: json['seedDescription'] as String? ?? '',
+        emotionalTag: json['emotionalTag'] as String? ?? '',
+        involvedNPC: json['involvedNPC'] as String?,
+        possibleReturnTypes: (json['possibleReturnTypes'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
+        callbackAgeMin: json['callbackAgeMin'] as int? ?? 0,
+        callbackAgeMax: json['callbackAgeMax'] as int? ?? 0,
+      );
+}
+
 class PlayerStats {
-  static const int schemaVersion = 3;
+  static const int schemaVersion = 4;
 
   int age;
   int happiness;
@@ -90,6 +133,7 @@ class PlayerStats {
   List<String> npcSeeds;
   String? lifePath;
   List<String> unresolvedTensions;
+  List<CallbackSeed> callbacks;
 
   PlayerStats({
     this.age = 0,
@@ -111,6 +155,7 @@ class PlayerStats {
     this.npcSeeds = const [],
     this.lifePath,
     this.unresolvedTensions = const [],
+    this.callbacks = const [],
   }) : identityState = identityState ?? IdentityState();
 
   Map<String, dynamic> toJson() => {
@@ -134,6 +179,7 @@ class PlayerStats {
         'npcSeeds': npcSeeds,
         'lifePath': lifePath,
         'unresolvedTensions': unresolvedTensions,
+        'callbacks': callbacks.map((c) => c.toJson()).toList(),
       };
 
   factory PlayerStats.fromJson(Map<String, dynamic> json) {
@@ -145,6 +191,7 @@ class PlayerStats {
     }
     final isV1 = version == 1;
     final isPreV3 = version < 3;
+    final isPreV4 = version < 4;
     return PlayerStats(
       age: json['age'] as int? ?? 0,
       happiness: json['happiness'] as int? ?? 80,
@@ -172,6 +219,12 @@ class PlayerStats {
       unresolvedTensions: isPreV3
           ? []
           : (json['unresolvedTensions'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      callbacks: isPreV4
+          ? []
+          : (json['callbacks'] as List<dynamic>?)
+                  ?.map((e) => CallbackSeed.fromJson(e as Map<String, dynamic>))
+                  .toList() ??
+              [],
     );
   }
 }
