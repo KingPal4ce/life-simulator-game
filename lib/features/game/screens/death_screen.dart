@@ -215,6 +215,40 @@ class DeathScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
+                  if (state.lifeStoryHeadline != null) ...[
+                    Text(
+                      '"${state.lifeStoryHeadline!}"',
+                      style: const TextStyle(
+                        color: AppColors.accentYellow,
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  if (state.lifeStoryPersonalityType != null) ...[
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppColors.accentYellow.withValues(alpha: 0.5)),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          state.lifeStoryPersonalityType!,
+                          style: const TextStyle(
+                            color: AppColors.accentYellow,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   if (state.isGeneratingStory)
                     const Center(
                       child: Column(
@@ -231,7 +265,7 @@ class DeathScreen extends StatelessWidget {
                         ],
                       ),
                     )
-                  else if (state.lifeStory != null)
+                  else if (state.lifeStory != null) ...[
                     Text(
                       state.lifeStory!,
                       style: const TextStyle(
@@ -239,8 +273,21 @@ class DeathScreen extends StatelessWidget {
                         fontSize: 15,
                         height: 1.8,
                       ),
-                    )
-                  else
+                    ),
+                    if (state.lifeStoryWorldLost != null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        state.lifeStoryWorldLost!,
+                        style: const TextStyle(
+                          color: AppColors.textOnDarkMuted,
+                          fontSize: 13,
+                          fontStyle: FontStyle.italic,
+                          height: 1.6,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ] else
                     Column(
                       children: [
                         const Text(
