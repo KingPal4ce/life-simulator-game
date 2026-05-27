@@ -45,6 +45,84 @@ class DeathScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: ListView(
                 children: [
+                  if (state.metaProgress.totalLivesPlayed > 0) ...[
+                    const Text(
+                      'YOUR LEGACY',
+                      style: TextStyle(
+                        color: AppColors.accentYellow,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: Text(
+                        'Lives Played: ${state.metaProgress.totalLivesPlayed}',
+                        style: const TextStyle(color: AppColors.textOnDarkMuted, fontSize: 13),
+                      ),
+                    ),
+                    if (state.metaProgress.completedLifePaths.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      const Text(
+                        'PATHS WALKED',
+                        style: TextStyle(
+                          color: AppColors.textOnDarkMuted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: state.metaProgress.completedLifePaths
+                            .map((p) => Chip(
+                                  label: Text(
+                                    p,
+                                    style: const TextStyle(fontSize: 11, color: Colors.black87),
+                                  ),
+                                  backgroundColor: AppColors.accentYellow.withValues(alpha: 0.7),
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                ))
+                            .toList(),
+                      ),
+                    ],
+                    if (state.metaProgress.unlockedEndings.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      const Text(
+                        'ENDINGS DISCOVERED',
+                        style: TextStyle(
+                          color: AppColors.textOnDarkMuted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: state.metaProgress.unlockedEndings
+                            .map((e) => Chip(
+                                  label: Text(
+                                    e,
+                                    style: const TextStyle(fontSize: 11, color: Colors.black87),
+                                  ),
+                                  backgroundColor: Colors.purpleAccent.withValues(alpha: 0.7),
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                ))
+                            .toList(),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    const Divider(color: Colors.white12),
+                    const SizedBox(height: 16),
+                  ],
                   const Text(
                     'LIFE SUMMARY',
                     style: TextStyle(
@@ -163,12 +241,28 @@ class DeathScreen extends StatelessWidget {
                       ),
                     )
                   else
-                    const Text(
-                      'Their story could not be told.',
-                      style: TextStyle(
-                        color: AppColors.textOnDarkMuted,
-                        fontStyle: FontStyle.italic,
-                      ),
+                    Column(
+                      children: [
+                        const Text(
+                          'Their story could not be told.',
+                          style: TextStyle(
+                            color: AppColors.textOnDarkMuted,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.accentYellow.withValues(alpha: 0.15),
+                            foregroundColor: AppColors.accentYellow,
+                            side: const BorderSide(color: AppColors.accentYellow, width: 1),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          onPressed: () => state.retryLifeStory(),
+                          icon: const Icon(Icons.refresh, size: 16),
+                          label: const Text('Retry Story'),
+                        ),
+                      ],
                     ),
                   const SizedBox(height: 24),
                   const Divider(color: Colors.white12),
