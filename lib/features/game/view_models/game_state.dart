@@ -241,6 +241,9 @@ class GameState extends ChangeNotifier {
     if (stats.lifePath != null && !metaProgress.completedLifePaths.contains(stats.lifePath)) {
       metaProgress.completedLifePaths = List.from(metaProgress.completedLifePaths)..add(stats.lifePath!);
     }
+    if (stats.lifePath != null) {
+      stats.unlockedEnding = stats.lifePath;
+    }
     if (stats.unlockedEnding != null && !metaProgress.unlockedEndings.contains(stats.unlockedEnding)) {
       metaProgress.unlockedEndings = List.from(metaProgress.unlockedEndings)..add(stats.unlockedEnding!);
     }
