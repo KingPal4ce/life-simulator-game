@@ -80,6 +80,24 @@ class AIService implements IAIService {
                       'reputationEffect': Schema.integer(
                         description: 'Change to reputation (-30 to 30). Set ONLY for choices that visibly affect public image. Default 0.',
                       ),
+                      'occupationUpdate': Schema.string(
+                        description: 'Set this ONLY if the chosen action meaningfully changes the person\'s occupation or role (e.g. "nurse", "unemployed", "CEO of startup"). Leave null if occupation is unchanged.',
+                      ),
+                      'relationshipUpdate': Schema.string(
+                        description: 'Set ONLY if relationship status changes: "single", "in a relationship", "married", "divorced", or "widowed". Leave null if unchanged.',
+                      ),
+                      'criminalRecordUpdate': Schema.string(
+                        description: 'Set ONLY if criminal status changes: "none", "minor offenses", "convicted felon". Leave null if unchanged.',
+                      ),
+                      'fameLevelUpdate': Schema.string(
+                        description: 'Set ONLY if fame changes: "unknown", "local", "regional", "nationally known", "famous". Leave null if unchanged.',
+                      ),
+                      'majorEventNote': Schema.string(
+                        description: 'A short phrase (under 10 words) capturing a defining life moment from this outcome that should be remembered forever, like "lost family savings at age 24" or "published first novel". Only set for truly major, life-defining outcomes — most choices should leave this null.',
+                      ),
+                      'involvedNPC': Schema.string(
+                        description: 'The first name (or name + role) of a specific person who is central to this outcome — a friend, rival, mentor, romantic interest, or stranger who matters. Set this when the outcome features a named individual the player might encounter again. Leave null for outcomes with no specific person involved.',
+                      ),
                     },
                     requiredProperties: [
                       'text',
@@ -121,6 +139,21 @@ class AIService implements IAIService {
         ? 'Recent context (for background only, NOT required to drive the event): "$previousOutcome"'
         : 'No specific recent context — something new is about to happen.';
 
+    final identityBlock = '''
+Current Identity State:
+- Occupation: ${stats.identityState.occupation}
+- Age: ${stats.age}
+- Relationship status: ${stats.identityState.relationshipStatus}
+- Criminal record: ${stats.identityState.criminalRecord}
+- Fame level: ${stats.identityState.fameLevel}
+- Education: ${stats.identityState.education}
+${stats.identityState.majorPastEvents.isEmpty ? '' : '- Major past events: ${stats.identityState.majorPastEvents.join('; ')}'}
+''';
+
+    final npcContext = stats.npcSeeds.isEmpty
+        ? ''
+        : 'Known people in this person\'s life: ${stats.npcSeeds.join(', ')}. You may reintroduce any of them when it fits naturally — do not force it.\n';
+
     final hiddenStatsBlock = '''
 Character Tendencies (internal — use these to shape event tone and option weighting, not to expose as numbers):
 - Morality: ${_tendency(stats.morality)} (${stats.morality}/100)
@@ -143,8 +176,8 @@ Current Stats:
 - Smarts: ${stats.smarts}/100
 - Looks: ${stats.looks}/100
 
-$hiddenStatsBlock
-$contextLine
+$hiddenStatsBlock$identityBlock
+$npcContext$contextLine
 
 Past decisions (background context — do NOT force a direct connection):
 $decisionContext
@@ -156,6 +189,8 @@ IMPORTANT — VARIETY RULE: Life does not always follow a direct script. Generat
 Do NOT make every event feel like an immediate consequence of the last choice. Mix it up.
 
 CRITICAL RULE FOR OPTIONS: Every option must be a first-person action the PLAYER themselves takes — never a parent, teacher, or other character. Bad: "My parents sign me up for tutoring." Good: "I ask my teacher for extra help after school." Write 3 options with meaningfully different consequences (one risky, one safe, one creative/unusual). Each outcome_description must be vivid (2-3 sentences) showing how the choice reshapes life going forward.
+
+IDENTITY CONTINUITY: The "Current Identity State" block above defines who this person IS right now. Never generate events that contradict it — a person with "fame level: unknown" is not already famous; a person with "criminal record: none" has no prior convictions. Events must be consistent with this identity.
 
 HIDDEN STAT GUIDANCE: For each option, set hidden stat effects only when the choice clearly warrants it — a moral/ethical choice should adjust moralityEffect; a social/reputation-driven choice should adjust popularityEffect or reputationEffect; a financial or power-seeking choice should adjust wealthEffect or greedEffect. Leave unrelated hidden stat fields at 0. Do not assign hidden stat values arbitrarily — most options should only affect 1–2 hidden stats at most.
 
