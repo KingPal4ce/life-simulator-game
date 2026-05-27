@@ -1,3 +1,42 @@
+class IdentityState {
+  String occupation;
+  String relationshipStatus;
+  String criminalRecord;
+  String fameLevel;
+  String education;
+  List<String> majorPastEvents;
+
+  IdentityState({
+    this.occupation = 'student',
+    this.relationshipStatus = 'single',
+    this.criminalRecord = 'none',
+    this.fameLevel = 'unknown',
+    this.education = 'no degree',
+    this.majorPastEvents = const [],
+  });
+
+  Map<String, dynamic> toJson() => {
+        'occupation': occupation,
+        'relationshipStatus': relationshipStatus,
+        'criminalRecord': criminalRecord,
+        'fameLevel': fameLevel,
+        'education': education,
+        'majorPastEvents': majorPastEvents,
+      };
+
+  factory IdentityState.fromJson(Map<String, dynamic> json) => IdentityState(
+        occupation: json['occupation'] as String? ?? 'student',
+        relationshipStatus: json['relationshipStatus'] as String? ?? 'single',
+        criminalRecord: json['criminalRecord'] as String? ?? 'none',
+        fameLevel: json['fameLevel'] as String? ?? 'unknown',
+        education: json['education'] as String? ?? 'no degree',
+        majorPastEvents: (json['majorPastEvents'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
+      );
+}
+
 class Decision {
   final int age;
   final String eventTitle;
@@ -47,6 +86,8 @@ class PlayerStats {
   List<String> lifeLog;
   List<String> achievements;
   List<Decision> decisions;
+  IdentityState identityState;
+  List<String> npcSeeds;
 
   PlayerStats({
     this.age = 0,
@@ -64,7 +105,9 @@ class PlayerStats {
     this.lifeLog = const [],
     this.achievements = const [],
     this.decisions = const [],
-  });
+    IdentityState? identityState,
+    this.npcSeeds = const [],
+  }) : identityState = identityState ?? IdentityState();
 
   Map<String, dynamic> toJson() => {
         'schemaVersion': schemaVersion,
@@ -83,6 +126,8 @@ class PlayerStats {
         'lifeLog': lifeLog,
         'achievements': achievements,
         'decisions': decisions.map((d) => d.toJson()).toList(),
+        'identityState': identityState.toJson(),
+        'npcSeeds': npcSeeds,
       };
 
   factory PlayerStats.fromJson(Map<String, dynamic> json) {
@@ -112,6 +157,10 @@ class PlayerStats {
               ?.map((e) => Decision.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      identityState: json['identityState'] != null
+          ? IdentityState.fromJson(json['identityState'] as Map<String, dynamic>)
+          : IdentityState(),
+      npcSeeds: (json['npcSeeds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
     );
   }
 }
@@ -130,6 +179,12 @@ class EventOption {
   final int wealthEffect;
   final int greedEffect;
   final int reputationEffect;
+  final String? occupationUpdate;
+  final String? relationshipUpdate;
+  final String? criminalRecordUpdate;
+  final String? fameLevelUpdate;
+  final String? majorEventNote;
+  final String? involvedNPC;
 
   EventOption({
     required this.text,
@@ -145,6 +200,12 @@ class EventOption {
     this.wealthEffect = 0,
     this.greedEffect = 0,
     this.reputationEffect = 0,
+    this.occupationUpdate,
+    this.relationshipUpdate,
+    this.criminalRecordUpdate,
+    this.fameLevelUpdate,
+    this.majorEventNote,
+    this.involvedNPC,
   });
 
   factory EventOption.fromJson(Map<String, dynamic> json) {
@@ -162,6 +223,12 @@ class EventOption {
       wealthEffect: json['wealthEffect'] as int? ?? 0,
       greedEffect: json['greedEffect'] as int? ?? 0,
       reputationEffect: json['reputationEffect'] as int? ?? 0,
+      occupationUpdate: json['occupationUpdate'] as String?,
+      relationshipUpdate: json['relationshipUpdate'] as String?,
+      criminalRecordUpdate: json['criminalRecordUpdate'] as String?,
+      fameLevelUpdate: json['fameLevelUpdate'] as String?,
+      majorEventNote: json['majorEventNote'] as String?,
+      involvedNPC: json['involvedNPC'] as String?,
     );
   }
 }
