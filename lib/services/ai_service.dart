@@ -59,6 +59,27 @@ class AIService implements IAIService {
                       'looksEffect': Schema.integer(
                         description: 'Change to looks (-30 to 30)',
                       ),
+                      'moralityEffect': Schema.integer(
+                        description: 'Change to morality (-30 to 30). Set ONLY for choices with a clear ethical/moral dimension. Default 0.',
+                      ),
+                      'disciplineEffect': Schema.integer(
+                        description: 'Change to discipline (-30 to 30). Set ONLY for choices involving consistency, work ethic, or self-control. Default 0.',
+                      ),
+                      'popularityEffect': Schema.integer(
+                        description: 'Change to popularity (-30 to 30). Set ONLY for choices with meaningful social or public impact. Default 0.',
+                      ),
+                      'creativityEffect': Schema.integer(
+                        description: 'Change to creativity (-30 to 30). Set ONLY for choices involving artistic, unconventional, or imaginative thinking. Default 0.',
+                      ),
+                      'wealthEffect': Schema.integer(
+                        description: 'Change to wealth (-30 to 30). Set ONLY for choices with significant financial consequences. Default 0.',
+                      ),
+                      'greedEffect': Schema.integer(
+                        description: 'Change to greed (-30 to 30). Set ONLY for choices driven by power, money, or accumulation. Default 0.',
+                      ),
+                      'reputationEffect': Schema.integer(
+                        description: 'Change to reputation (-30 to 30). Set ONLY for choices that visibly affect public image. Default 0.',
+                      ),
                     },
                     requiredProperties: [
                       'text',
@@ -100,6 +121,17 @@ class AIService implements IAIService {
         ? 'Recent context (for background only, NOT required to drive the event): "$previousOutcome"'
         : 'No specific recent context — something new is about to happen.';
 
+    final hiddenStatsBlock = '''
+Character Tendencies (internal — use these to shape event tone and option weighting, not to expose as numbers):
+- Morality: ${_tendency(stats.morality)} (${stats.morality}/100)
+- Discipline: ${_tendency(stats.discipline)} (${stats.discipline}/100)
+- Popularity: ${_tendency(stats.popularity)} (${stats.popularity}/100)
+- Creativity: ${_tendency(stats.creativity)} (${stats.creativity}/100)
+- Wealth: ${_tendency(stats.wealth)} (${stats.wealth}/100)
+- Greed: ${_tendency(stats.greed)} (${stats.greed}/100)
+- Reputation: ${_tendency(stats.reputation)} (${stats.reputation}/100)
+''';
+
     final prompt = '''
 You are the narrator of an immersive life simulator. A year has passed in this person's life.
 
@@ -111,6 +143,7 @@ Current Stats:
 - Smarts: ${stats.smarts}/100
 - Looks: ${stats.looks}/100
 
+$hiddenStatsBlock
 $contextLine
 
 Past decisions (background context — do NOT force a direct connection):
@@ -123,6 +156,8 @@ IMPORTANT — VARIETY RULE: Life does not always follow a direct script. Generat
 Do NOT make every event feel like an immediate consequence of the last choice. Mix it up.
 
 CRITICAL RULE FOR OPTIONS: Every option must be a first-person action the PLAYER themselves takes — never a parent, teacher, or other character. Bad: "My parents sign me up for tutoring." Good: "I ask my teacher for extra help after school." Write 3 options with meaningfully different consequences (one risky, one safe, one creative/unusual). Each outcome_description must be vivid (2-3 sentences) showing how the choice reshapes life going forward.
+
+HIDDEN STAT GUIDANCE: For each option, set hidden stat effects only when the choice clearly warrants it — a moral/ethical choice should adjust moralityEffect; a social/reputation-driven choice should adjust popularityEffect or reputationEffect; a financial or power-seeking choice should adjust wealthEffect or greedEffect. Leave unrelated hidden stat fields at 0. Do not assign hidden stat values arbitrarily — most options should only affect 1–2 hidden stats at most.
 
 Return ONLY valid JSON.
 ''';
@@ -177,5 +212,13 @@ Write the story now. Do not list events — tell a story.
       debugPrint('Story Generation Error: $e');
       return 'Their story was one that could not be put into words.';
     }
+  }
+
+  String _tendency(int value) {
+    if (value >= 80) return 'very high';
+    if (value >= 60) return 'high';
+    if (value >= 40) return 'moderate';
+    if (value >= 20) return 'low';
+    return 'very low';
   }
 }
