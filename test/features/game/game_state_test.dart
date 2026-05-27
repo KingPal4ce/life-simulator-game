@@ -82,13 +82,18 @@ class FakeAIService implements IAIService {
   }
 
   @override
-  Future<String> generateLifeStory(
+  Future<LifeStoryResult> generateLifeStory(
     PlayerStats stats,
     List<String> lifeLog,
     List<Decision> decisions,
   ) async {
     generateStoryCallCount++;
-    return 'A life well lived.';
+    return LifeStoryResult(
+      headline: 'A life well lived.',
+      personalityType: 'The Dreamer',
+      story: 'A life well lived.',
+      worldLost: 'The world lost a dreamer.',
+    );
   }
 
   @override
