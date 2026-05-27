@@ -30,13 +30,20 @@ class Decision {
 }
 
 class PlayerStats {
-  static const int schemaVersion = 1;
+  static const int schemaVersion = 2;
 
   int age;
   int happiness;
   int health;
   int smarts;
   int looks;
+  int morality;
+  int discipline;
+  int popularity;
+  int creativity;
+  int wealth;
+  int greed;
+  int reputation;
   List<String> lifeLog;
   List<String> achievements;
   List<Decision> decisions;
@@ -47,6 +54,13 @@ class PlayerStats {
     this.health = 90,
     this.smarts = 50,
     this.looks = 50,
+    this.morality = 50,
+    this.discipline = 50,
+    this.popularity = 50,
+    this.creativity = 50,
+    this.wealth = 20,
+    this.greed = 10,
+    this.reputation = 50,
     this.lifeLog = const [],
     this.achievements = const [],
     this.decisions = const [],
@@ -59,6 +73,13 @@ class PlayerStats {
         'health': health,
         'smarts': smarts,
         'looks': looks,
+        'morality': morality,
+        'discipline': discipline,
+        'popularity': popularity,
+        'creativity': creativity,
+        'wealth': wealth,
+        'greed': greed,
+        'reputation': reputation,
         'lifeLog': lifeLog,
         'achievements': achievements,
         'decisions': decisions.map((d) => d.toJson()).toList(),
@@ -66,17 +87,25 @@ class PlayerStats {
 
   factory PlayerStats.fromJson(Map<String, dynamic> json) {
     final version = json['schemaVersion'] as int?;
-    if (version != schemaVersion) {
+    if (version == null || (version != 1 && version != schemaVersion)) {
       throw FormatException(
         'PlayerStats schema version mismatch: expected $schemaVersion, got $version',
       );
     }
+    final isV1 = version == 1;
     return PlayerStats(
       age: json['age'] as int? ?? 0,
       happiness: json['happiness'] as int? ?? 80,
       health: json['health'] as int? ?? 90,
       smarts: json['smarts'] as int? ?? 50,
       looks: json['looks'] as int? ?? 50,
+      morality: isV1 ? 50 : (json['morality'] as int? ?? 50),
+      discipline: isV1 ? 50 : (json['discipline'] as int? ?? 50),
+      popularity: isV1 ? 50 : (json['popularity'] as int? ?? 50),
+      creativity: isV1 ? 50 : (json['creativity'] as int? ?? 50),
+      wealth: isV1 ? 20 : (json['wealth'] as int? ?? 20),
+      greed: isV1 ? 10 : (json['greed'] as int? ?? 10),
+      reputation: isV1 ? 50 : (json['reputation'] as int? ?? 50),
       lifeLog: (json['lifeLog'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
       achievements: (json['achievements'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
       decisions: (json['decisions'] as List<dynamic>?)
@@ -94,6 +123,13 @@ class EventOption {
   final int healthEffect;
   final int smartsEffect;
   final int looksEffect;
+  final int moralityEffect;
+  final int disciplineEffect;
+  final int popularityEffect;
+  final int creativityEffect;
+  final int wealthEffect;
+  final int greedEffect;
+  final int reputationEffect;
 
   EventOption({
     required this.text,
@@ -102,6 +138,13 @@ class EventOption {
     this.healthEffect = 0,
     this.smartsEffect = 0,
     this.looksEffect = 0,
+    this.moralityEffect = 0,
+    this.disciplineEffect = 0,
+    this.popularityEffect = 0,
+    this.creativityEffect = 0,
+    this.wealthEffect = 0,
+    this.greedEffect = 0,
+    this.reputationEffect = 0,
   });
 
   factory EventOption.fromJson(Map<String, dynamic> json) {
@@ -112,6 +155,13 @@ class EventOption {
       healthEffect: json['healthEffect'] as int? ?? 0,
       smartsEffect: json['smartsEffect'] as int? ?? 0,
       looksEffect: json['looksEffect'] as int? ?? 0,
+      moralityEffect: json['moralityEffect'] as int? ?? 0,
+      disciplineEffect: json['disciplineEffect'] as int? ?? 0,
+      popularityEffect: json['popularityEffect'] as int? ?? 0,
+      creativityEffect: json['creativityEffect'] as int? ?? 0,
+      wealthEffect: json['wealthEffect'] as int? ?? 0,
+      greedEffect: json['greedEffect'] as int? ?? 0,
+      reputationEffect: json['reputationEffect'] as int? ?? 0,
     );
   }
 }
