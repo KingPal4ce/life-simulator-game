@@ -8,8 +8,9 @@ abstract interface class IAIService {
   Future<GameEvent?> generateNextEvent(
     PlayerStats stats,
     String previousOutcome,
-    List<Decision> recentDecisions,
-  );
+    List<Decision> recentDecisions, {
+    String? themePack,
+  });
 
   Future<LifeStoryResult> generateLifeStory(
     PlayerStats stats,
@@ -151,12 +152,24 @@ class AIService implements IAIService {
           ),
         );
 
+  static const Map<String, String> _themePrompts = {
+    'cyberpunk':
+        'This life takes place in a cyberpunk near-future world. All events, careers, and social situations should reflect that setting — megacorporations, neural implants, hacking culture, neon-lit megacities, and the sharp divide between elite and underclass.',
+    'medieval':
+        'This life takes place in a medieval world. All events should reflect that era — trades and guilds, nobles and serfs, plague and war, arranged marriages, religious institutions, and the brutal uncertainty of life before modernity.',
+    'horror':
+        'This life takes place in a world tinged with horror. Paranormal elements, cursed decisions, and dark outcomes are present alongside ordinary life events. Not every event needs to be horrific — but dread should linger at the edges.',
+    'celebrity':
+        'This life takes place in the hyper-visible world of celebrity culture. Events revolve around fame cycles, paparazzi, brand deals, public image management, social media obsession, public scandals, and the cost of living in the spotlight.',
+  };
+
   @override
   Future<GameEvent?> generateNextEvent(
     PlayerStats stats,
     String previousOutcome,
-    List<Decision> recentDecisions,
-  ) async {
+    List<Decision> recentDecisions, {
+    String? themePack,
+  }) async {
     final decisionContext = recentDecisions.isEmpty
         ? 'No prior decisions yet — this is early in life.'
         : recentDecisions.map((d) => '  • ${d.toString()}').join('\n');
@@ -196,6 +209,10 @@ ${stats.unresolvedTensions.map((t) => '  • $t').join('\n')}
         ? 'MID-LIFE DISRUPTION WINDOW: This person is between ages 35–55. If no major life disruption has yet occurred (burnout, divorce, scandal, addiction, career collapse, betrayal, health scare, existential crisis, reinvention), now is the time to introduce one. It should feel inevitable given their choices — not random. If a major disruption has already clearly happened, skip this.\n'
         : '';
 
+    final themeBlock = (themePack != null && _themePrompts.containsKey(themePack))
+        ? 'THEME: ${_themePrompts[themePack]}\n'
+        : '';
+
     final hiddenStatsBlock = '''
 Character Tendencies (internal — use these to shape event tone and option weighting, not to expose as numbers):
 - Morality: ${_tendency(stats.morality)} (${stats.morality}/100)
@@ -209,7 +226,7 @@ Character Tendencies (internal — use these to shape event tone and option weig
 
     final prompt = '''
 You are the narrator of an immersive life simulator. A year has passed in this person's life.
-
+${themeBlock.isNotEmpty ? '\n$themeBlock' : ''}
 Current Stats:
 - Happiness: ${stats.happiness}/100
 - Health: ${stats.health}/100
