@@ -41,6 +41,55 @@ void main() {
     });
   });
 
+  group('CallbackSeed', () {
+    test('toJson / fromJson round-trip', () {
+      final seed = CallbackSeed(
+        seedAge: 15,
+        seedDescription: 'Helped a stranger.',
+        emotionalTag: 'kindness',
+        involvedNPC: 'Maria',
+        possibleReturnTypes: ['reunion', 'consequence'],
+        callbackAgeMin: 20,
+        callbackAgeMax: 40,
+      );
+
+      final restored = CallbackSeed.fromJson(seed.toJson());
+
+      expect(restored.seedAge, 15);
+      expect(restored.seedDescription, 'Helped a stranger.');
+      expect(restored.emotionalTag, 'kindness');
+      expect(restored.involvedNPC, 'Maria');
+      expect(restored.possibleReturnTypes, ['reunion', 'consequence']);
+      expect(restored.callbackAgeMin, 20);
+      expect(restored.callbackAgeMax, 40);
+    });
+
+    test('fromJson uses defaults for missing fields', () {
+      final seed = CallbackSeed.fromJson({});
+
+      expect(seed.seedAge, 0);
+      expect(seed.seedDescription, '');
+      expect(seed.emotionalTag, '');
+      expect(seed.involvedNPC, isNull);
+      expect(seed.possibleReturnTypes, isEmpty);
+      expect(seed.callbackAgeMin, 0);
+      expect(seed.callbackAgeMax, 0);
+    });
+
+    test('involvedNPC is preserved as null when absent', () {
+      final seed = CallbackSeed.fromJson({
+        'seedAge': 5,
+        'seedDescription': 'Something happened.',
+        'emotionalTag': 'moment',
+        'possibleReturnTypes': ['rumor'],
+        'callbackAgeMin': 10,
+        'callbackAgeMax': 30,
+      });
+
+      expect(seed.involvedNPC, isNull);
+    });
+  });
+
   group('PlayerStats', () {
     test('default values', () {
       final stats = PlayerStats();
@@ -108,6 +157,49 @@ void main() {
       );
     });
 
+    test('toJson / fromJson preserves lifePath and unresolvedTensions', () {
+      final stats = PlayerStats(
+        lifePath: 'Entrepreneur',
+        unresolvedTensions: ['owes a debt', 'rival at work'],
+      );
+
+      final restored = PlayerStats.fromJson(stats.toJson());
+
+      expect(restored.lifePath, 'Entrepreneur');
+      expect(restored.unresolvedTensions, ['owes a debt', 'rival at work']);
+    });
+
+    test('toJson / fromJson preserves callbacks', () {
+      final seed = CallbackSeed(
+        seedAge: 10,
+        seedDescription: 'A pivotal moment.',
+        emotionalTag: 'ambition',
+        possibleReturnTypes: ['consequence'],
+        callbackAgeMin: 15,
+        callbackAgeMax: 35,
+      );
+      final stats = PlayerStats(callbacks: [seed]);
+
+      final restored = PlayerStats.fromJson(stats.toJson());
+
+      expect(restored.callbacks.length, 1);
+      expect(restored.callbacks.first.seedAge, 10);
+      expect(restored.callbacks.first.emotionalTag, 'ambition');
+    });
+
+    test('v2 data migrates lifePath to null and unresolvedTensions to empty list', () {
+      final stats = PlayerStats.fromJson({'schemaVersion': 2, 'age': 10});
+
+      expect(stats.lifePath, isNull);
+      expect(stats.unresolvedTensions, isEmpty);
+    });
+
+    test('v3 data migrates callbacks to empty list', () {
+      final stats = PlayerStats.fromJson({'schemaVersion': 3, 'age': 20});
+
+      expect(stats.callbacks, isEmpty);
+    });
+
     test('fromJson deserialises nested decisions', () {
       final json = {
         'schemaVersion': PlayerStats.schemaVersion,
@@ -156,6 +248,38 @@ void main() {
       final option = EventOption(text: 'Just exist');
 
       expect(option.outcomeDescription, '');
+    });
+
+    test('fromJson parses newTension and resolvesTension', () {
+      final option = EventOption.fromJson({
+        'text': 'I take a risk',
+        'outcome_description': 'Things get complicated.',
+        'happinessEffect': 0,
+        'healthEffect': 0,
+        'smartsEffect': 0,
+        'looksEffect': 0,
+        'newTension': 'dangerous rivalry',
+        'resolvesTension': true,
+      });
+
+      expect(option.newTension, 'dangerous rivalry');
+      expect(option.resolvesTension, isTrue);
+    });
+
+    test('newTension and resolvesTension default to null when absent', () {
+      final option = EventOption.fromJson({'text': 'Nothing special'});
+
+      expect(option.newTension, isNull);
+      expect(option.resolvesTension, isNull);
+    });
+
+    test('fromJson parses involvedNPC', () {
+      final option = EventOption.fromJson({
+        'text': 'I meet her again',
+        'involvedNPC': 'Elena, old flame',
+      });
+
+      expect(option.involvedNPC, 'Elena, old flame');
     });
   });
 

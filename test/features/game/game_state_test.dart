@@ -638,4 +638,196 @@ void main() {
       expect(fakeAI.generateEventCallCount, 1);
     });
   });
+
+  // -------------------------------------------------------------------------
+  group('life path detection', () {
+    setUp(() async {
+      state.startGame();
+      await Future.delayed(Duration.zero);
+      state.currentEvent = _makeEvent();
+    });
+
+    test('sets Criminal when morality is low and greed is high', () {
+      state.stats.morality = 20;
+      state.stats.greed = 65;
+      state.selectOption(_makeOption());
+      expect(state.stats.lifePath, 'Criminal');
+    });
+
+    test('sets Famous Celebrity when popularity and looks are high', () {
+      state.stats.popularity = 80;
+      state.stats.looks = 70;
+      state.selectOption(_makeOption());
+      expect(state.stats.lifePath, 'Famous Celebrity');
+    });
+
+    test('sets Entrepreneur when wealth, discipline, and greed are high', () {
+      state.stats.wealth = 70;
+      state.stats.discipline = 65;
+      state.stats.greed = 55;
+      state.selectOption(_makeOption());
+      expect(state.stats.lifePath, 'Entrepreneur');
+    });
+
+    test('sets Lonely Genius when smarts are high and popularity is low', () {
+      state.stats.smarts = 85;
+      state.stats.popularity = 25;
+      state.selectOption(_makeOption());
+      expect(state.stats.lifePath, 'Lonely Genius');
+    });
+
+    test('sets Spiritual Monk when morality and happiness are high and wealth is low', () {
+      state.stats.morality = 90;
+      state.stats.happiness = 75;
+      state.stats.wealth = 30;
+      state.selectOption(_makeOption());
+      expect(state.stats.lifePath, 'Spiritual Monk');
+    });
+
+    test('sets Internet Influencer when popularity and creativity are high and age is young', () {
+      state.stats.popularity = 75;
+      state.stats.creativity = 70;
+      state.stats.age = 25;
+      state.selectOption(_makeOption());
+      expect(state.stats.lifePath, 'Internet Influencer');
+    });
+
+    test('sets Activist / Revolutionary when morality and popularity are high and greed is low', () {
+      state.stats.morality = 80;
+      state.stats.popularity = 65;
+      state.stats.greed = 25;
+      state.selectOption(_makeOption());
+      expect(state.stats.lifePath, 'Activist / Revolutionary');
+    });
+
+    test('sets Family Patriarch/Matriarch when happiness and morality are high and greed is low', () {
+      state.stats.happiness = 80;
+      state.stats.morality = 70;
+      state.stats.greed = 35;
+      state.selectOption(_makeOption());
+      expect(state.stats.lifePath, 'Family Patriarch/Matriarch');
+    });
+
+    test('does not set path when no thresholds are met', () {
+      // Default stats: no path thresholds satisfied
+      state.stats = PlayerStats();
+      state.selectOption(_makeOption());
+      expect(state.stats.lifePath, isNull);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  group('tension tracking', () {
+    setUp(() async {
+      state.startGame();
+      await Future.delayed(Duration.zero);
+      state.currentEvent = _makeEvent();
+    });
+
+    test('newTension appends to unresolvedTensions', () {
+      final option = EventOption(text: 'I borrow from a loan shark', newTension: 'owes money to loan shark');
+      state.selectOption(option);
+      expect(state.stats.unresolvedTensions, contains('owes money to loan shark'));
+    });
+
+    test('resolvesTension removes the oldest tension', () {
+      state.stats.unresolvedTensions = ['debt to loan shark', 'rivalry with boss'];
+      final option = EventOption(text: 'I pay back the debt', resolvesTension: true);
+      state.selectOption(option);
+      expect(state.stats.unresolvedTensions, isNot(contains('debt to loan shark')));
+      expect(state.stats.unresolvedTensions, contains('rivalry with boss'));
+    });
+
+    test('tensions are capped at 3 entries — oldest is dropped', () {
+      state.stats.unresolvedTensions = ['a', 'b', 'c'];
+      final option = EventOption(text: 'I create more trouble', newTension: 'd');
+      state.selectOption(option);
+      expect(state.stats.unresolvedTensions.length, 3);
+      expect(state.stats.unresolvedTensions, contains('d'));
+      expect(state.stats.unresolvedTensions, isNot(contains('a')));
+    });
+
+    test('resolvesTension does nothing when tensions list is empty', () {
+      state.stats.unresolvedTensions = [];
+      final option = EventOption(text: 'I resolve nothing', resolvesTension: true);
+      expect(() => state.selectOption(option), returnsNormally);
+      expect(state.stats.unresolvedTensions, isEmpty);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  group('callback seeds', () {
+    setUp(() async {
+      state.startGame();
+      await Future.delayed(Duration.zero);
+      state.currentEvent = _makeEvent();
+    });
+
+    test('creates a seed when a hidden stat delta is >= 15', () {
+      final option = EventOption(text: 'I make a bold moral choice', moralityEffect: 20);
+      state.selectOption(option);
+      expect(state.stats.callbacks, isNotEmpty);
+    });
+
+    test('creates a seed when an NPC is involved', () {
+      final option = EventOption(text: 'I meet someone important', involvedNPC: 'Marcus, old friend');
+      state.selectOption(option);
+      expect(state.stats.callbacks, isNotEmpty);
+      expect(state.stats.callbacks.first.involvedNPC, 'Marcus, old friend');
+    });
+
+    test('does not create a seed for low-impact options without NPC', () {
+      final option = EventOption(text: 'Nothing much happens', moralityEffect: 5);
+      state.selectOption(option);
+      expect(state.stats.callbacks, isEmpty);
+    });
+
+    test('seed callbackAgeRange starts 5 years into the future', () {
+      state.stats.age = 10;
+      final option = EventOption(text: 'A big moment', moralityEffect: 20);
+      state.selectOption(option);
+      expect(state.stats.callbacks.first.callbackAgeMin, 15);
+      expect(state.stats.callbacks.first.callbackAgeMax, 35);
+    });
+
+    test('due callbacks are removed after _triggerNextEvent', () async {
+      state.stats.age = 20;
+      state.stats.health = 80;
+      state.stats.callbacks = [
+        CallbackSeed(
+          seedAge: 15,
+          seedDescription: 'An old moment.',
+          emotionalTag: 'kindness',
+          possibleReturnTypes: ['reunion'],
+          callbackAgeMin: 18,
+          callbackAgeMax: 25,
+        ),
+      ];
+
+      state.continueToNextEvent(); // _ageUp → age 21 → _triggerNextEvent
+      await Future.delayed(Duration.zero);
+
+      expect(state.stats.callbacks, isEmpty);
+    });
+
+    test('out-of-range callbacks are not removed', () async {
+      state.stats.age = 5;
+      state.stats.health = 80;
+      state.stats.callbacks = [
+        CallbackSeed(
+          seedAge: 3,
+          seedDescription: 'A childhood memory.',
+          emotionalTag: 'moment',
+          possibleReturnTypes: ['reunion'],
+          callbackAgeMin: 15,
+          callbackAgeMax: 30,
+        ),
+      ];
+
+      state.continueToNextEvent(); // age 6 — still before callbackAgeMin of 15
+      await Future.delayed(Duration.zero);
+
+      expect(state.stats.callbacks, isNotEmpty);
+    });
+  });
 }
