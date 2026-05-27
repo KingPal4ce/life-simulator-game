@@ -134,6 +134,7 @@ class PlayerStats {
   String? lifePath;
   List<String> unresolvedTensions;
   List<CallbackSeed> callbacks;
+  String? unlockedEnding;
 
   PlayerStats({
     this.age = 0,
@@ -156,6 +157,7 @@ class PlayerStats {
     this.lifePath,
     this.unresolvedTensions = const [],
     this.callbacks = const [],
+    this.unlockedEnding,
   }) : identityState = identityState ?? IdentityState();
 
   Map<String, dynamic> toJson() => {
@@ -180,6 +182,7 @@ class PlayerStats {
         'lifePath': lifePath,
         'unresolvedTensions': unresolvedTensions,
         'callbacks': callbacks.map((c) => c.toJson()).toList(),
+        'unlockedEnding': unlockedEnding,
       };
 
   factory PlayerStats.fromJson(Map<String, dynamic> json) {
@@ -225,6 +228,7 @@ class PlayerStats {
                   ?.map((e) => CallbackSeed.fromJson(e as Map<String, dynamic>))
                   .toList() ??
               [],
+      unlockedEnding: json['unlockedEnding'] as String?,
     );
   }
 }
