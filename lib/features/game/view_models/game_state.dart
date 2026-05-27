@@ -22,6 +22,9 @@ class GameState extends ChangeNotifier {
 
   // Life story fields
   String? lifeStory;
+  String? lifeStoryHeadline;
+  String? lifeStoryPersonalityType;
+  String? lifeStoryWorldLost;
   bool isGeneratingStory = false;
 
   bool get isDead => stats.health <= 0 || stats.age >= 100;
@@ -77,6 +80,9 @@ class GameState extends ChangeNotifier {
     currentEvent = null;
     currentConsequence = null;
     lifeStory = null;
+    lifeStoryHeadline = null;
+    lifeStoryPersonalityType = null;
+    lifeStoryWorldLost = null;
     isGeneratingStory = false;
     _saveState();
     _triggerNextEvent();
@@ -110,8 +116,8 @@ class GameState extends ChangeNotifier {
       }
     }
 
-    final recentDecisions = stats.decisions.length > 5
-        ? stats.decisions.sublist(stats.decisions.length - 5)
+    final recentDecisions = stats.decisions.length > 10
+        ? stats.decisions.sublist(stats.decisions.length - 10)
         : stats.decisions;
 
     GameEvent? event;
@@ -221,7 +227,11 @@ class GameState extends ChangeNotifier {
     isGeneratingStory = true;
     lifeStory = null;
     notifyListeners();
-    lifeStory = await aiService.generateLifeStory(stats, stats.lifeLog, stats.decisions);
+    final result = await aiService.generateLifeStory(stats, stats.lifeLog, stats.decisions);
+    lifeStory = result.story;
+    lifeStoryHeadline = result.headline.isNotEmpty ? result.headline : null;
+    lifeStoryPersonalityType = result.personalityType.isNotEmpty ? result.personalityType : null;
+    lifeStoryWorldLost = result.worldLost.isNotEmpty ? result.worldLost : null;
     isGeneratingStory = false;
     notifyListeners();
   }
@@ -240,7 +250,11 @@ class GameState extends ChangeNotifier {
     lifeStory = null;
     notifyListeners();
 
-    lifeStory = await aiService.generateLifeStory(stats, stats.lifeLog, stats.decisions);
+    final result = await aiService.generateLifeStory(stats, stats.lifeLog, stats.decisions);
+    lifeStory = result.story;
+    lifeStoryHeadline = result.headline.isNotEmpty ? result.headline : null;
+    lifeStoryPersonalityType = result.personalityType.isNotEmpty ? result.personalityType : null;
+    lifeStoryWorldLost = result.worldLost.isNotEmpty ? result.worldLost : null;
 
     isGeneratingStory = false;
     notifyListeners();
