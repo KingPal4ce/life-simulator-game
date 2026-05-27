@@ -43,6 +43,21 @@ class FakeLocalStorageService implements ILocalStorageService {
 
   @override
   MetaProgress loadMetaProgress() => _meta;
+
+  @override
+  void saveThemeSettings(String? selectedTheme, Map<String, bool> unlockedThemes) {}
+
+  @override
+  ({String? selectedTheme, Map<String, bool> unlockedThemes}) loadThemeSettings() =>
+      (
+        selectedTheme: null,
+        unlockedThemes: <String, bool>{
+          'cyberpunk': false,
+          'medieval': false,
+          'horror': false,
+          'celebrity': false,
+        },
+      );
 }
 
 class FakeAIService implements IAIService {
@@ -56,8 +71,9 @@ class FakeAIService implements IAIService {
   Future<GameEvent?> generateNextEvent(
     PlayerStats stats,
     String previousOutcome,
-    List<Decision> recentDecisions,
-  ) async {
+    List<Decision> recentDecisions, {
+    String? themePack,
+  }) async {
     generateEventCallCount++;
     if (generateEventCallCount <= failFirstNCalls) return null;
     return GameEvent(
