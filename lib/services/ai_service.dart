@@ -171,6 +171,10 @@ ${stats.unresolvedTensions.map((t) => '  • $t').join('\n')}
         ? 'Current Life Path: ${stats.lifePath}. Events should reflect the opportunities and pressures of that life — include elements that only someone on this specific path would face.\n'
         : '';
 
+    final midLifeCrisisBlock = (stats.age >= 35 && stats.age <= 55)
+        ? 'MID-LIFE DISRUPTION WINDOW: This person is between ages 35–55. If no major life disruption has yet occurred (burnout, divorce, scandal, addiction, career collapse, betrayal, health scare, existential crisis, reinvention), now is the time to introduce one. It should feel inevitable given their choices — not random. If a major disruption has already clearly happened, skip this.\n'
+        : '';
+
     final hiddenStatsBlock = '''
 Character Tendencies (internal — use these to shape event tone and option weighting, not to expose as numbers):
 - Morality: ${_tendency(stats.morality)} (${stats.morality}/100)
@@ -193,7 +197,7 @@ Current Stats:
 - Smarts: ${stats.smarts}/100
 - Looks: ${stats.looks}/100
 
-$hiddenStatsBlock$identityBlock$tensionsBlock$lifePathBlock
+$hiddenStatsBlock$identityBlock$tensionsBlock$lifePathBlock$midLifeCrisisBlock
 $npcContext$contextLine
 
 Past decisions (background context — do NOT force a direct connection):
