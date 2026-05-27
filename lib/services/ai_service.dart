@@ -12,7 +12,7 @@ abstract interface class IAIService {
     String? themePack,
   });
 
-  Future<LifeStoryResult> generateLifeStory(
+  Future<LifeStoryResult?> generateLifeStory(
     PlayerStats stats,
     List<String> lifeLog,
     List<Decision> decisions,
@@ -283,7 +283,7 @@ Return ONLY valid JSON.
   }
 
   @override
-  Future<LifeStoryResult> generateLifeStory(
+  Future<LifeStoryResult?> generateLifeStory(
     PlayerStats stats,
     List<String> lifeLog,
     List<Decision> decisions,
@@ -338,12 +338,7 @@ Do not list events — tell a story.
     } catch (e) {
       debugPrint('Story Generation Error: $e');
     }
-    return LifeStoryResult(
-      headline: '',
-      personalityType: '',
-      story: 'Their story was one that could not be put into words.',
-      worldLost: '',
-    );
+    return null;
   }
 
   @override
