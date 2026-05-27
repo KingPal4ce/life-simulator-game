@@ -11,6 +11,12 @@ abstract interface class ILocalStorageService {
   void clearSession();
   void saveMetaProgress(MetaProgress meta);
   MetaProgress loadMetaProgress();
+  void saveThemeSettings(
+    String? selectedTheme,
+    Map<String, bool> unlockedThemes,
+  );
+  ({String? selectedTheme, Map<String, bool> unlockedThemes})
+  loadThemeSettings();
 }
 
 class LocalStorageService implements ILocalStorageService {
@@ -18,6 +24,7 @@ class LocalStorageService implements ILocalStorageService {
   static const String sessionKey = 'session';
   static const String previousOutcomeKey = 'previousOutcome';
   static const String metaProgressKey = 'metaProgress';
+  static const String themeSettingsKey = 'themeSettings';
 
   @override
   Future<void> init() async {
@@ -78,5 +85,50 @@ class LocalStorageService implements ILocalStorageService {
       }
     }
     return MetaProgress();
+  }
+
+  @override
+  void saveThemeSettings(
+    String? selectedTheme,
+    Map<String, bool> unlockedThemes,
+  ) {
+    final box = Hive.box(boxName);
+    box.put(
+      themeSettingsKey,
+      jsonEncode({
+        'selectedTheme': selectedTheme,
+        'unlockedThemes': unlockedThemes,
+      }),
+    );
+  }
+
+  @override
+  ({String? selectedTheme, Map<String, bool> unlockedThemes})
+  loadThemeSettings() {
+    final box = Hive.box(boxName);
+    final saved = box.get(themeSettingsKey);
+    if (saved != null) {
+      try {
+        final data = jsonDecode(saved) as Map<String, dynamic>;
+        final selectedTheme = data['selectedTheme'] as String?;
+        final rawUnlocked =
+            data['unlockedThemes'] as Map<String, dynamic>? ?? {};
+        final unlockedThemes = rawUnlocked.map(
+          (k, v) => MapEntry(k, v as bool),
+        );
+        return (selectedTheme: selectedTheme, unlockedThemes: unlockedThemes);
+      } catch (e) {
+        debugPrint('LocalStorageService: failed to load theme settings: $e');
+      }
+    }
+    return (
+      selectedTheme: null,
+      unlockedThemes: <String, bool>{
+        'cyberpunk': true,
+        'medieval': true,
+        'horror': false,
+        'celebrity': false,
+      },
+    );
   }
 }
